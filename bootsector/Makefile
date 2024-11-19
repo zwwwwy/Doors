@@ -15,6 +15,7 @@ all : $(bins) $(imgs)
 ../build/imgs/boot.img: ../build/bins/boot.bin
 	@mkdir -p $(dir $@)
 	dd if=$^ of=$@ bs=512 count=1 conv=notrunc
+	dd if=$^ of=$@ bs=512 count=1 seek=6 conv=notrunc
 
 clean: 
 	rm -rf $(bins)
