@@ -1,4 +1,4 @@
-subdirs	= kernel
+subdirs	= bootsector
 bins	= $(wildcard ./build/bins/*.bin)
 imgs	= $(wildcard ./build/imgs/*.img)
 
