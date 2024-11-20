@@ -1,5 +1,5 @@
-org 0x7c00
-bits 16
+[org 0x7c00]
+[bits 16]
 
 %define ORG_ADDR            0x7c00
 %define LOADER_BASE         0x1000
@@ -54,7 +54,7 @@ start_boot:         ; offset=90
     mov     ds, ax
     mov     es, ax
     mov     ss, ax
-    mov     sp, ORG_ADDR  ; 在boot阶段sp没啥用吧
+    mov     sp, ORG_ADDR
 
     ; 清屏
     mov     ax, 0x0600  ; AH=6->向上，AL=0->清屏
@@ -73,26 +73,28 @@ start_boot:         ; offset=90
     mov     dx, 0x0000
     call    fn_print_string
     
-    ; 读取根目录项到0x80000
-    mov     di, START_OF_ROOT_CLUS
-    mov     ax, SECT_BASE
-    mov     es, ax
-    mov     bx, SECT_OFFSET
-    call    fn_read_a_file
-
-    ; 从0x80000处查找loader.bin的簇号
-    mov     si, ax
-    mov     di, file_name
-    call    fn_find_a_file_short_name
+    ;; 读取根目录项到0x80000
+    ;mov     di, START_OF_ROOT_CLUS
+    ;mov     ax, SECT_BASE
+    ;mov     es, ax
+    ;mov     bx, SECT_OFFSET
+    ;call    fn_read_a_file
+    ;
+    ;; 从0x80000处查找loader.bin的簇号
+    ;mov     si, ax
+    ;mov     di, file_name
+    ;call    fn_find_a_file_short_name
+    ;
+    ;cmp     ax, 0
+    ;jne     load_loader
+    ;mov     si, error
+    ;mov     dx, 0x0100
+    ;call    fn_print_string
+    ;jmp $
 
     ; 把loader.bin写入0x10000
-    cmp     ax, 0
-    jne     load_loader
-    mov     si, error
-    mov     dx, 0x0100
-    call    fn_print_string
-    jmp $
 
+    mov     ax, 39
 load_loader:
     mov     di, ax
     mov     ax, LOADER_BASE
@@ -233,13 +235,13 @@ fn_read_a_file:
     ; 返回：
     ; ax=共读取的扇区数目
     ;-------------------------------------------------------------------
-
     push    bp
     mov     bp ,sp
 
-    sub     sp, 8
+    sub     sp, 10
     mov     ax, 0
     mov     word [bp-8], ax         ; 记录读取的扇区数
+    mov     word [bp-10], ax        ; bx偏移量
     ;mov     word [bp-10], ax        ; 记录上次读取的FAT表所在扇区号, 有富裕空间再写
 
 .read_next_sect:
@@ -250,7 +252,7 @@ fn_read_a_file:
     div     di
     mov     word [bp-4], dx         ; offset
     add     ax, START_OF_FAT1_SECT
-    mov     word [bp-10], ax
+    ;mov     word [bp-10], ax
     mov     di, ax
     mov     si, 1                   ; 从FAT1中读1个扇区
 
@@ -263,8 +265,8 @@ fn_read_a_file:
     call    fn_read_a_sector
     mov     di, word [bp-4]
     shl     di, 2
-    mov     ax, word [es:bx+di+2]
-    mov     dx, word [es:bx+di]
+    mov     ax, word [es:bx+di]     ; 下一部分簇号
+    mov     dx, word [es:bx+di+2]
     mov     word [bp-6], ax
 
     pop     bx
@@ -273,8 +275,10 @@ fn_read_a_file:
     mov     di, word [bp-2]
     add     di, BIAS_OF_DATA_SECT
     mov     si, SECT_PER_CLUS
+    add     bx, word [bp-10]
     call    fn_read_a_sector
     inc     word [bp-8]
+    add     word [bp-10],512
 
     cmp     dx, 0
     ja      .done
