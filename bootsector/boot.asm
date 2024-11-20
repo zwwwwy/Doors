@@ -73,28 +73,26 @@ start_boot:         ; offset=90
     mov     dx, 0x0000
     call    fn_print_string
     
-    ;; 读取根目录项到0x80000
-    ;mov     di, START_OF_ROOT_CLUS
-    ;mov     ax, SECT_BASE
-    ;mov     es, ax
-    ;mov     bx, SECT_OFFSET
-    ;call    fn_read_a_file
-    ;
-    ;; 从0x80000处查找loader.bin的簇号
-    ;mov     si, ax
-    ;mov     di, file_name
-    ;call    fn_find_a_file_short_name
-    ;
-    ;cmp     ax, 0
-    ;jne     load_loader
-    ;mov     si, error
-    ;mov     dx, 0x0100
-    ;call    fn_print_string
-    ;jmp $
+    ; 读取根目录项到0x80000
+    mov     di, START_OF_ROOT_CLUS
+    mov     ax, SECT_BASE
+    mov     es, ax
+    mov     bx, SECT_OFFSET
+    call    fn_read_a_file
+
+    ; 从0x80000处查找loader.bin的簇号
+    mov     si, ax
+    mov     di, file_name
+    call    fn_find_a_file_short_name
+
+    cmp     ax, 0
+    jne     load_loader
+    mov     si, error
+    mov     dx, 0x0100
+    call    fn_print_string
+    jmp $
 
     ; 把loader.bin写入0x10000
-
-    mov     ax, 39
 load_loader:
     mov     di, ax
     mov     ax, LOADER_BASE
