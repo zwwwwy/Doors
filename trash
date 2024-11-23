@@ -1,0 +1,46 @@
+fn_print_char:
+    ;--------------------------------
+    ; 打印单个字符, 需要提前设置好gs
+    ; ah=显示模式
+    ; al=字符
+    ; dh=行
+    ; dl=列
+    ;--------------------------------
+    push    bx
+    push    ax
+    mov     bl, dh
+
+    shl     bx, 4
+    lea     ebx, [4*ebx+ebx]    ; 跟AT&T的语法不大一样,bx=bx*80
+
+    add     bl, dl
+    mov     [gs:ebx*2],ax
+    pop     ax
+    pop     bx
+    ret
+
+
+
+fn_print_string:
+    ;--------------------------
+    ; 打印字符串, 黑底白字
+    ; si=字符串地址
+    ; dx=光标起始位置
+    ; -------------------------
+    mov     ax, 0b800h
+    mov     gs, ax
+    mov     ah, 0x0f        ;0000黑底1111白字
+.print_a_char:
+    mov     al, [si]
+    cmp     al, 0
+    jz      .finish_print
+    call    fn_print_char
+    inc     si
+    inc     dl
+    jmp     .print_a_char
+
+.finish_print:
+    ret
+
+
+上面的函数时而行时而不行，暂时不知道为什么

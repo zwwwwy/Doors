@@ -2,8 +2,8 @@
 [bits 16]
 
 %define ORG_ADDR            0x7c00
-%define LOADER_BASE         0x1000
-%define LOADER_OFFSET       0x0000
+%define LOADER_BASE         0x9000
+%define LOADER_OFFSET       0x0200
 
 %define START_OF_DATA_SECT    3180  ; 数据区起始扇区号
 %define START_OF_FAT1_SECT      32  ; FAT1起始扇区号
@@ -100,7 +100,7 @@ load_loader:
     mov     bx, LOADER_OFFSET
     call    fn_read_a_file
 
-    jmp     0x1000:0x0000
+    jmp     LOADER_BASE:LOADER_OFFSET
 
 
 loader_not_found:
@@ -291,7 +291,7 @@ fn_read_a_file:
 fn_find_a_file_short_name:
     ;------------------------------------------
     ; di=待查找文件名地址
-    ; si=目录项扇区数
+    ; si=目录项所占扇区数
     ; es:bx=目录项所在的内存地址(提前读入)
     ; 返回：
     ; ax=文件首簇号
