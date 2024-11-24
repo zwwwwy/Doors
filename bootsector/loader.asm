@@ -1,7 +1,6 @@
-
 %define FILE_BASE       0x9000
-%define INFO_OFFSET     0x0000
-%define LOADER_OFFSET   0x0200
+%define INFO_OFFSET_VBE 0x0000
+%define INFO_OFFSET_MEM 0x0100
 %define KERNEL_BASE     0x1000
 %define KERNEL_OFFSET   0x0000
 
@@ -30,16 +29,17 @@
 %define FAT_PER_SECT           128  ; 每扇区的FAT表项数
 %define SECT_PER_CLUS            1  ; 每簇扇区数
 
-[org 0x90200]
+[org 0x91000]
 [section code_16]
 [bits 16]
 start_loader:
-    mov     ax, cs
+    mov     ax, 0x9000
     mov     ds, ax
     mov     es, ax
-    mov     ax, 0
     mov     ss, ax
-    mov     sp, 0x7c00
+    mov     sp, 0
+    ; org这里把msg等标签的offset多算了0x1000，改org的话代码跳转又有问题，只好改段寄存器了
+    ; 不知道为什么会这样，当org-0x90200的时候没这个问题
 
     mov     si, msg
     call    fn_print_in_new_line
@@ -69,8 +69,15 @@ read_kernel_successful:
     mov     si, load_kernel_successful
     call    fn_print_in_new_line
     
+    ; 保留了0x90000->0x9ffff的空间用来存放硬件信息
+    ; 获取VBE信息: 0x90000->0x900ff
+    mov     ax, FILE_BASE
+    mov     es, ax
+    mov     di, INFO_OFFSET_VBE
+    mov     ax, 0x4f00
+    int     10h
 
-    ; 读取内存信息
+    ; 读取内存信息: 0x90100->0x901ff
     ; 下面是地址范围描述符结构符(ARDS)的说明，其被bios写入es:di处
     ; -------------------------------------------------------
     ; offset    attrname        description
@@ -87,7 +94,7 @@ read_kernel_successful:
     ;
     mov     ax, FILE_BASE
     mov     es, ax
-    mov     di, INFO_OFFSET
+    mov     di, INFO_OFFSET_MEM
     mov     ebx, 0          ; 内存信息要多次返回，第一次中断置0，此后bios会更新之
 read_next_ARDS:
     mov     eax, 0xe820     ; 全是子功能号
@@ -108,9 +115,9 @@ read_meminfo_successful:
     call    fn_print_in_new_line
 
     ; 设置SVGA模式
-    ;mov     ax, 0x4f02
-    ;mov     bx, 0x4180
-    ;int     10h
+    mov     ax, 0x4f02
+    mov     bx, 0x4180
+    int     10h
 
     ; 打开a20地址线
     push    ax
@@ -175,14 +182,6 @@ IA32e_support:
     mov     dword [0x72028], 0xa00083   ; 0xa00000-0xafffff
 
     lgdt    [gdt_64_ptr]
-    mov     ax, 0x10
-    mov     ds, ax
-    mov     es, ax
-    mov     ss, ax
-    mov     fs, ax
-    mov     gs, ax
-    mov     esp, 0x7e00
-    ; 除cs，其余段寄存器均切换至ia-32e的代码段
 
     ; 开启物理地址扩展功能
     mov     eax, cr4
@@ -216,15 +215,9 @@ IA32e_support:
     mov     cr0, eax
 
     ; 分页开启完成，跳转至64位代码
-    jmp     8:bits_64
+    jmp     8:KERNEL_ADDRESS
 
 IA32e_not_support:
-    jmp     $
-
-[section code_64]
-[bits 64]
-bits_64:
-    mov     rax, 0xffffffffffffffff
     jmp     $
 
 [section func_16]
@@ -271,17 +264,12 @@ fn_print_string:
     ret
 
 
-fn_new_line:
-    add     word [cur_pos], 0x100
-    and     word [cur_pos], 0xff00
-    ret
-
-
 fn_print_in_new_line:
     ; si=字符串地址
     push    dx
-    call    fn_new_line
     mov     dx, word [cur_pos]
+    add     dx, 0x100           ; 换行
+    and     dx, 0xff00          ; 列数清零
     call    fn_print_string
     mov     word [cur_pos], dx
     pop     dx

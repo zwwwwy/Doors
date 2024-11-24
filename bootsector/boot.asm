@@ -2,8 +2,8 @@
 [bits 16]
 
 %define ORG_ADDR            0x7c00
-%define LOADER_BASE         0x9000
-%define LOADER_OFFSET       0x0200
+%define LOADER_BASE         0x9100
+%define LOADER_OFFSET       0x0000
 
 %define START_OF_DATA_SECT    3180  ; 数据区起始扇区号
 %define START_OF_FAT1_SECT      32  ; FAT1起始扇区号
