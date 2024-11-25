@@ -64,10 +64,10 @@ start_boot:         ; offset=90
     int     10h
 
     ; 光标初始化
-    mov     ax, 0x0200  ; AH=2
-    mov     bx, 0       ; BH=0->页码
-    mov     dx, 0       ; DH=y, DL=x
-    int     10h
+    ;mov     ax, 0x0200  ; AH=2
+    ;mov     bx, 0       ; BH=0->页码
+    ;mov     dx, 0       ; DH=y, DL=x
+    ;int     10h
 
     mov     si, msg
     mov     dx, 0x0000

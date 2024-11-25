@@ -2,16 +2,35 @@
     .global _start
 _start:
 
+	mov	$0x10,	%ax
+	mov	%ax,	%ds
+	mov	%ax,	%es
+	mov	%ax,	%fs
+	mov	%ax,	%ss
+	mov	$0x7E00,	%esp
+
     lgdt    gdt_ptr(%rip)
     lidt    idt_ptr(%rip)
 
+	mov	$0x10,	%ax
+	mov	%ax,	%ds
+	mov	%ax,	%es
+	mov	%ax,	%fs
+	mov	%ax,	%gs
+	mov	%ax,	%ss
+
+	movq	$0x7E00,	%rsp
 
     movq    $0x101000, %rax
-    jmp     .
     movq    %rax, %cr3
-    movq    switch_seg(%rip), %rax      # 把地址替换为0xffff8...
-    pushq   $0x08
-    pushq   %rax
+
+
+
+    pushq   $0x08          # 压入段选择子
+    movq    switch_seg(%rip), %rax
+    pushq   %rax           # 压入返回地址
+    iretq
+
     iretq                               # gas不支持长跳转和长调用
 
 switch_seg:
@@ -23,13 +42,14 @@ entry64:
     movq    %rax, %gs
     movq    %rax, %ss
     movq    $0xffff800000007e00, %rsp
-    movq    go_to_kernel(%rip), %rsp
+
+    movq    go_to_kernel(%rip), %rax
     pushq   $0x08
     pushq   %rax
     iretq
 
 go_to_kernel:
-    .quad   kernel_start
+    .quad   setup_kernel
 
 # 页表
 .align  8
