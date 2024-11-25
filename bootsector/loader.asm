@@ -316,7 +316,7 @@ fn_read_a_sector:
     ret
 
 
-fn_read_a_file:
+    fn_read_a_file:
     ;-------------------------------------------------------------------
     ; 注意，如果一个文件某部分的簇号过高(超过62357)，其可能不会被读取完全
     ; di=文件首簇号
@@ -330,7 +330,7 @@ fn_read_a_file:
     sub     sp, 10
     mov     ax, 0
     mov     word [bp-8], ax         ; 记录读取的扇区数
-    mov     word [bp-10], ax        ; bx偏移量
+    mov     word [bp-10], bx        ; bx
     ;mov     word [bp-10], ax        ; 记录上次读取的FAT表所在扇区号, 有富裕空间再写
 
 .read_next_sect:
@@ -361,16 +361,13 @@ fn_read_a_file:
     pop     bx
     pop     es
 
-    push    bx
     mov     di, word [bp-2]
     add     di, BIAS_OF_DATA_SECT
     mov     si, SECT_PER_CLUS
-    add     bx, word [bp-10]
+    mov     bx, word [bp-10]
     call    fn_read_a_sector
     inc     word [bp-8]
     add     word [bp-10],512
-    pop     bx
-
 
     cmp     dx, 0
     ja      .done
@@ -381,6 +378,7 @@ fn_read_a_file:
     mov     ax, [bp-8]
     leave
     ret
+
 
 
 fn_find_a_file_short_name:
