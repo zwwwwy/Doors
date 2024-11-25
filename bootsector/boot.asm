@@ -270,6 +270,7 @@ fn_read_a_file:
     pop     bx
     pop     es
 
+    push    bx
     mov     di, word [bp-2]
     add     di, BIAS_OF_DATA_SECT
     mov     si, SECT_PER_CLUS
@@ -277,6 +278,7 @@ fn_read_a_file:
     call    fn_read_a_sector
     inc     word [bp-8]
     add     word [bp-10],512
+    pop     bx
 
     cmp     dx, 0
     ja      .done

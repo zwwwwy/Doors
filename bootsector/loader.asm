@@ -170,7 +170,9 @@ IA32e_support:
 
     ; 创建64位临时页表
     mov     dword [0x70000], 0x71007    ; 顶级页表，指向0x71000，可读写用户模式
-    mov     dword [0x70800], 0x71007    ; 冗余备份
+    mov     dword [0x70800], 0x71007    ; 用于将0xffff800000000000映射到0地址处
+                                        ; 地址中PML4共9位，上面地址即100000000(0x100)
+                                        ; 每项8个字节，所以偏移应该是0x800
 
     mov     dword [0x71000], 0x72007    ; 二级页表，指向0x72000
 
@@ -359,6 +361,7 @@ fn_read_a_file:
     pop     bx
     pop     es
 
+    push    bx
     mov     di, word [bp-2]
     add     di, BIAS_OF_DATA_SECT
     mov     si, SECT_PER_CLUS
@@ -366,6 +369,8 @@ fn_read_a_file:
     call    fn_read_a_sector
     inc     word [bp-8]
     add     word [bp-10],512
+    pop     bx
+
 
     cmp     dx, 0
     ja      .done
