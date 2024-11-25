@@ -14,6 +14,8 @@
 
 %define SECT_BASE           0x8000  ; 检索文件的时候把根目录项的一个扇区暂存在这里
 %define SECT_OFFSET              0  ; offset of up
+%define FAT_BASE            0x7000
+%define FAT_OFFSET          0xfe00
 
 %define BPB_SecPerTrk           63  ; 每磁道扇区数         
 %define BS_DrvNum             0x80  ; 驱动器号
@@ -232,6 +234,7 @@ fn_read_a_file:
     ; es:bx=缓冲区地址
     ; 返回：
     ; ax=共读取的扇区数目
+    ; es:bx=缓冲区下一个空的512字节的开头
     ;-------------------------------------------------------------------
     push    bp
     mov     bp ,sp
@@ -257,9 +260,9 @@ fn_read_a_file:
     push    es
     push    bx
 
-    mov     ax, SECT_BASE
+    mov     ax, FAT_BASE
     mov     es, ax
-    mov     bx, SECT_OFFSET
+    mov     bx, FAT_BASE
     call    fn_read_a_sector
     mov     di, word [bp-4]
     shl     di, 2

@@ -18,6 +18,8 @@
 
 %define SECT_BASE           0x8000  ; 检索文件的时候把根目录项的一个扇区暂存在这里
 %define SECT_OFFSET              0  ; offset of up
+%define FAT_BASE            0x7000
+%define FAT_OFFSET          0xfe00
 
 %define BPB_SecPerTrk           63  ; 每磁道扇区数         
 %define BS_DrvNum             0x80  ; 驱动器号
@@ -37,7 +39,7 @@ start_loader:
     mov     ds, ax
     mov     es, ax
     mov     ss, ax
-    mov     sp, 0
+    mov     sp, 0x7e00
     ; org这里把msg等标签的offset多算了0x1000，改org的话代码跳转又有问题，只好改段寄存器了
     ; 不知道为什么会这样，当org-0x90200的时候没这个问题
 
@@ -131,10 +133,13 @@ read_meminfo_successful:
     lgdt    [gdt_48]
     lidt    [idt_48]
     mov     eax, cr0
+
+    mov     ax, 0x10000
+
     or      eax, 1
     mov     cr0, eax
     jmp     dword 8:bits_32
-
+    sti
 
 [section code_32]
 [bits 32]
@@ -323,6 +328,7 @@ fn_read_a_sector:
     ; es:bx=缓冲区地址
     ; 返回：
     ; ax=共读取的扇区数目
+    ; es:bx=缓冲区下一个空的512字节的开头
     ;-------------------------------------------------------------------
     push    bp
     mov     bp ,sp
@@ -348,9 +354,9 @@ fn_read_a_sector:
     push    es
     push    bx
 
-    mov     ax, SECT_BASE
+    mov     ax, FAT_BASE
     mov     es, ax
-    mov     bx, SECT_OFFSET
+    mov     bx, FAT_OFFSET
     call    fn_read_a_sector
     mov     di, word [bp-4]
     shl     di, 2

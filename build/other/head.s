@@ -13,7 +13,7 @@ _start:
  mov %ax, %es
  mov %ax, %fs
  mov %ax, %ss
- mov $0x7E00, %esp
+ mov $0x7e00, %esp
 
     lgdt gdt_ptr(%rip)
     lidt idt_ptr(%rip)
@@ -24,20 +24,16 @@ _start:
  mov %ax, %fs
  mov %ax, %gs
  mov %ax, %ss
-
- movq $0x7E00, %rsp
+ movq $0x7e00, %rsp
 
     movq $0x101000, %rax
     movq %rax, %cr3
-
-
 
     pushq $0x08 # 压入段选择子
     movq switch_seg(%rip), %rax
     pushq %rax # 压入返回地址
     iretq
 
-    iretq # gas不支持长跳转和长调用
 
 switch_seg:
     .quad entry64
