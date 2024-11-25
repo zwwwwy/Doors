@@ -1,7 +1,8 @@
 __attribute__((naked)) void setup_kernel() {
-  __asm__ volatile("movq $0x7E00, %rsp\n" // 设置 rsp 寄存器
-                   "jmp kernel_start\n"   // 跳转到 main 函数
-  );
+  __asm__ volatile("movq  $0xffff800000007e00, %rsp\n\t"
+                   "movq  $0x0010, %rax\n\t"
+                   "movq  %rax, %ss\n\t"
+                   "jmp kernel_start\n\t");
 }
 void test(void);
 

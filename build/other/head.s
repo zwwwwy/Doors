@@ -1,8 +1,8 @@
 # 0 "head.S"
 # 0 "<built-in>"
-# 0 "<command-line>"
+# 0 "<命令行>"
 # 1 "/usr/include/stdc-predef.h" 1 3 4
-# 0 "<command-line>" 2
+# 0 "<命令行>" 2
 # 1 "head.S"
 .section .text
     .global _start
