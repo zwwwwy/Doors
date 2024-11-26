@@ -1,8 +1,9 @@
-%define FILE_BASE       0x9000
-%define INFO_OFFSET_VBE 0x0000
-%define INFO_OFFSET_MEM 0x0100
-%define KERNEL_BASE     0x1000
-%define KERNEL_OFFSET   0x0000
+%define FILE_BASE           0x9000
+%define INFO_OFFSET_VBE     0x0000
+%define INFO_OFFSET_MODE    0x0100
+%define INFO_OFFSET_MEM     0x0200
+%define KERNEL_BASE         0x1000
+%define KERNEL_OFFSET       0x0000
 
 %define KERNEL_ADDRESS    0x100000  ; 转移后的kernel地址
 %define TMP_KERNEL_START   0x10000
@@ -77,6 +78,31 @@ read_kernel_successful:
     mov     es, ax
     mov     di, INFO_OFFSET_VBE
     mov     ax, 0x4f00
+    int     10h
+
+    ; ModeInfoBlock
+;    mov     ax, FILE_BASE
+;    mov     es, ax
+;    mov     cx, 0xff
+;GET_MODE_LIST:
+;    add     cx, 1
+;    cmp     cx, 0x200
+;    jz      .finish
+;    mov     di, INFO_OFFSET_MODE
+;    mov     ax, 0x4f01
+;    int     10h
+;    cmp     ax, 0x004f
+;    jnz     GET_MODE_LIST
+
+;.finish:
+;    jmp     $
+
+    ; 查看指定显示模式的ModeInfoBlock
+    mov     ax, FILE_BASE
+    mov     es, ax
+    mov     di, INFO_OFFSET_MODE
+    mov     cx, 0x180
+    mov     ax, 0x4f01
     int     10h
 
     ; 读取内存信息: 0x90100->0x901ff

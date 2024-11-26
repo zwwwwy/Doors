@@ -4,12 +4,19 @@ __attribute__((naked)) void setup_kernel() {
                    "movq  %rax, %ss\n\t"
                    "jmp kernel_start\n\t");
 }
-void test(void);
 
 void kernel_start(void) {
-  test();
-  while (1) {
-  }
-}
+  int *diplay_ptr = (int *)0xa00000;
+  int i;
 
-void test(void) { __asm__ volatile("movq $6, %%rax" ::); }
+  for (i = 0; i < 1440 * 90; i++) {
+    *diplay_ptr = (int)0x00ff0000;
+    diplay_ptr += 1;
+  }
+  /*for (i = 0; i < 1440 * 20; i++) {*/
+  /*  *diplay_ptr = (int)0x0000ff00;*/
+  /*  diplay_ptr += 1;*/
+  /*}*/
+  while (1) {
+  };
+}
