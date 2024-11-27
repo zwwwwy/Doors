@@ -6,6 +6,7 @@ typedef struct {
 	int	 screen_height;
 	int	 row;
 	int	 col;
+	int	 BitsPerPixel;
 	int* init_cur_pos;
 } display_struct;
 

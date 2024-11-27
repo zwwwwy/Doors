@@ -4,8 +4,18 @@ display_struct display_info;
 buffer_struck  buffer_info;
 
 void init_display() {
-	display_info.screen_width  = 1440;
-	display_info.screen_height = 900;
+	unsigned short screen_width;
+	unsigned short screen_height;
+	unsigned char  bpp;
+
+	__asm__ __volatile__("movw (0x90112), %0\n\t"
+						 "movw (0x90114), %1\n\t"
+						 "movb (0x90119), %2\n\t"
+						 : "=r"(screen_width), "=r"(screen_height), "=r"(bpp)
+						 :);
+	display_info.screen_width  = screen_width;
+	display_info.screen_height = screen_height;
+	display_info.BitsPerPixel  = bpp;
 	display_info.row		   = 0;
 	display_info.col		   = 0;
 	display_info.init_cur_pos  = (int*)0xa00000;
