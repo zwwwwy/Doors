@@ -1,13 +1,14 @@
 #ifndef C_PRINTK_H
 #define C_PRINTK_H
+#include <stdarg.h>
 
 void putchar(char ascii_code, int x, int y, int FR_color, int BK_color, char char_width,
 			 char char_heigth);
 
-void printk(char* format);
-void putchar_ascii(char ascii_code, int x, int y, int FR_color, int BK_color, char char_width,
-				   char char_heigth);
+int printk(char* format, ...);
+int vsprintfk(char* format, va_list args);
 
-void printk_ascii(char* format);
+void clear_buffer();
+void clear_screen();
 
 #endif
