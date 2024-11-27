@@ -15,9 +15,9 @@ __attribute__((naked)) void setup_kernel() {
 void kernel_start(void) {
 	init_display();
 	init_buffer();
-	printk("width:%u\n", display_info.screen_width);
-	printk("height:%u\n", display_info.screen_height);
-	printk("bpp:%x\n", display_info.BitsPerPixel);
+	for (int i = 0; i < 10; ++i) {
+		printk_color("num:%o\n", 0x00ff0000, 0x0000ff00, i);
+	}
 
 	/*printk("switch to 64 bits, kernel loaded successfully. printk built successfully.\n");*/
 	while (1) {

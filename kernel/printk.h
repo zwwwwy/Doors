@@ -6,6 +6,7 @@ void putchar(char ascii_code, int x, int y, int FR_color, int BK_color, char cha
 			 char char_heigth);
 
 int printk(char* format, ...);
+int printk_color(char* format, int FR_color, int BK_color, ...);
 int vsprintfk(char* format, va_list args);
 
 void clear_buffer();

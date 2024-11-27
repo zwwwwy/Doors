@@ -6,6 +6,27 @@
 extern display_struct display_info;
 extern buffer_struck  buffer_info;
 
+// for的初始化减完length还要减1是因为vsprintfk返回纯字符数量，不含结尾处的0。
+#define printk_process()                                                                           \
+	for (char* p = (char*)buffer_info.current_ptr - length - 1; *p; ++p) {                         \
+		if (*p == '\b') {                                                                          \
+			--x;                                                                                   \
+			length -= 2;                                                                           \
+		} else if (*p == '\t') {                                                                   \
+			x += 4 - (x % 4);                                                                      \
+			--length;                                                                              \
+		} else if (*p == '\n') {                                                                   \
+			x = 0;                                                                                 \
+			++y;                                                                                   \
+			--length;                                                                              \
+		} else {                                                                                   \
+			putchar(*p, x, y, FR_color, BK_color, char_width, char_heigth);                        \
+			++x;                                                                                   \
+		}                                                                                          \
+	}                                                                                              \
+	display_info.col = x;                                                                          \
+	display_info.row = y;
+
 void putchar(char ascii_code, int x, int y, int FR_color, int BK_color, char char_width,
 			 char char_heigth) {
 	// 光标应当指向下个字符的左上角
@@ -36,6 +57,7 @@ int vsprintfk(char* format, va_list args) {
 	}
 	char* buffer_ptr = (char*)buffer_info.current_ptr;
 	char* start		 = buffer_ptr;
+	char* fmt_s_ptr;
 
 	for (int i = 0; format[i]; i++) {
 		if (format[i] == '%') {
@@ -86,6 +108,47 @@ int vsprintfk(char* format, va_list args) {
 				} while (num_u);
 				break;
 
+			case 'b':
+				num_u = va_arg(args, unsigned);
+
+				*(buffer_ptr++)	  = '0';
+				*(buffer_ptr++)	  = 'b';
+				ptr_brfore_format = buffer_ptr; // 符号不能随数字部分倒序
+				do {
+					num_char		= num_u % 2;
+					num_u			= num_u / 2;
+					*(buffer_ptr++) = num_char + 0x30;
+
+				} while (num_u);
+				break;
+
+			case 'o':
+				num_u = va_arg(args, unsigned);
+
+				*(buffer_ptr++)	  = '0';
+				*(buffer_ptr++)	  = 'o';
+				ptr_brfore_format = buffer_ptr; // 符号不能随数字部分倒序
+				do {
+					num_char		= num_u % 8;
+					num_u			= num_u / 8;
+					*(buffer_ptr++) = num_char + 0x30;
+
+				} while (num_u);
+				break;
+
+			case 'c':
+				num_char		= (char)va_arg(args, int);
+				*(buffer_ptr++) = num_char;
+				break;
+
+			case 's':
+				fmt_s_ptr = va_arg(args, char*);
+				for (; *fmt_s_ptr; ++fmt_s_ptr) {
+					*(buffer_ptr++) = *fmt_s_ptr;
+				}
+				ptr_brfore_format = buffer_ptr; // 字符串不倒序
+				break;
+
 			default:
 				*(buffer_ptr++) = format[i];
 				--i;
@@ -123,25 +186,23 @@ int printk(char* format, ...) {
 	va_start(args, format);
 	int length = vsprintfk(format, args);
 
-	// 减完length还要减1是因为vsprintfk返回纯字符数量，不含结尾处的0。
-	for (char* p = (char*)buffer_info.current_ptr - length - 1; *p; ++p) {
-		if (*p == '\b') {
-			--x;
-			length -= 2;
-		} else if (*p == '\t') {
-			x += 4 - (x % 4);
-			--length;
-		} else if (*p == '\n') {
-			x = 0;
-			++y;
-			--length;
-		} else {
-			putchar(*p, x, y, FR_color, BK_color, char_width, char_heigth);
-			++x;
-		}
-	}
-	display_info.col = x;
-	display_info.row = y;
+	printk_process();
+
+	return length;
+}
+
+int printk_color(char* format, int FR_color, int BK_color, ...) {
+	char char_width	 = 8;
+	char char_heigth = 16;
+
+	int x = display_info.col;
+	int y = display_info.row;
+
+	va_list args;
+	va_start(args, BK_color);
+	int length = vsprintfk(format, args);
+
+	printk_process();
 
 	return length;
 }
