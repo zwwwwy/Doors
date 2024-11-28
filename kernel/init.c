@@ -18,11 +18,11 @@ void init_display() {
 	display_info.BitsPerPixel  = bpp;
 	display_info.row		   = 0;
 	display_info.col		   = 0;
-	display_info.init_cur_pos  = (int*)0xa00000;
+	display_info.init_cur_pos  = (int*)0xffff800000a00000;
 }
 
 void init_buffer() {
-	char* ptr = (char*)0x10000;
+	char* ptr = (char*)0xffff800000010000;
 
 	buffer_info.init_ptr	= (void*)ptr;
 	buffer_info.current_ptr = (void*)ptr;

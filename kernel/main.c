@@ -6,10 +6,13 @@ extern buffer_struck  buffer_info;
 extern display_struct display_info;
 
 __attribute__((naked)) void setup_kernel() {
-	__asm__ __volatile__("movq  $0xffff800000007e00, %rsp\n\t"
-						 "movq  $0x0010, %rax\n\t"
-						 "movq  %rax, %ss\n\t"
-						 "jmp kernel_start\n\t");
+	__asm__ __volatile__("movq  %0, %%rsp\n\t"
+						 "movw  %1, %%ax\n\t"
+						 "movw  %%ax, %%ss\n\t"
+						 "jmp	kernel_start\n\t"
+						 :
+						 : "i"(0xffff800000007e00), "i"(0x0010)
+						 : "ax");
 }
 
 void kernel_start(void) {
