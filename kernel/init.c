@@ -19,6 +19,8 @@ void init_display() {
 	display_info.row		   = 0;
 	display_info.col		   = 0;
 	display_info.init_cur_pos  = (int*)0xffff800000a00000;
+	display_info.char_width	   = 8;
+	display_info.char_height   = 16;
 }
 
 void init_buffer() {

@@ -7,7 +7,7 @@ extern display_struct display_info;
 extern buffer_struck  buffer_info;
 
 // for的初始化减完length还要减1是因为vsprintfk返回纯字符数量，不含结尾处的0。
-#define printk_process()                                                                           \
+#define PRINTK_PROCESS()                                                                           \
 	for (char* p = (char*)buffer_info.current_ptr - length - 1; *p; ++p) {                         \
 		if (*p == '\b') {                                                                          \
 			--x;                                                                                   \
@@ -20,15 +20,20 @@ extern buffer_struck  buffer_info;
 			++y;                                                                                   \
 			--length;                                                                              \
 		} else {                                                                                   \
-			putchar(*p, x, y, FR_color, BK_color, char_width, char_heigth);                        \
+			putchark(*p, x, y, FR_color, BK_color, char_width, char_heigth);                       \
 			++x;                                                                                   \
 		}                                                                                          \
 	}                                                                                              \
 	display_info.col = x;                                                                          \
 	display_info.row = y;
 
-void putchar(char ascii_code, int x, int y, int FR_color, int BK_color, char char_width,
-			 char char_heigth) {
+#define SCALE_CHANGE_BELOW_DEC(scale)                                                              \
+	num_char		= num_u % scale;                                                               \
+	num_u			= num_u / scale;                                                               \
+	*(buffer_ptr++) = num_char + 0x30;
+
+void putchark(char ascii_code, int x, int y, int FR_color, int BK_color, char char_width,
+			  char char_heigth) {
 	// 光标应当指向下个字符的左上角
 	int	 col_offset;
 	int* cur_ptr =
@@ -49,8 +54,9 @@ void putchar(char ascii_code, int x, int y, int FR_color, int BK_color, char cha
 
 int vsprintfk(char* format, va_list args) {
 	// 返回格式化后的纯字符数量(含\b,\n,\t等，但不含结尾的0)
-	unsigned num_u;
-	char	 num_char;
+	unsigned	  num_u;
+	char		  num_char;
+	unsigned long num_l;
 	// 有内存越界风险，不过缓冲区的后面应该没什么东西，暂时不考虑
 	if (buffer_info.current_ptr - buffer_info.init_ptr <= 0) {
 		clear_buffer();
@@ -68,9 +74,7 @@ int vsprintfk(char* format, va_list args) {
 			case 'u':
 				num_u = va_arg(args, unsigned);
 				do {
-					num_char		= num_u % 10;
-					num_u			= num_u / 10;
-					*(buffer_ptr++) = num_char + 0x30;
+					SCALE_CHANGE_BELOW_DEC(10);
 				} while (num_u);
 				break;
 
@@ -83,9 +87,7 @@ int vsprintfk(char* format, va_list args) {
 					ptr_brfore_format = buffer_ptr; // 符号不能随数字部分倒序
 				}
 				do {
-					num_char		= num_u % 10;
-					num_u			= num_u / 10;
-					*(buffer_ptr++) = num_char + 0x30;
+					SCALE_CHANGE_BELOW_DEC(10)
 				} while (num_u);
 				break;
 
@@ -107,6 +109,24 @@ int vsprintfk(char* format, va_list args) {
 
 				} while (num_u);
 				break;
+			case 'l':
+				num_l = va_arg(args, unsigned long);
+
+				*(buffer_ptr++)	  = '0';
+				*(buffer_ptr++)	  = 'x';
+				ptr_brfore_format = buffer_ptr; // 符号不能随数字部分倒序
+				do {
+					num_char = num_l % 16;
+					num_l	 = num_l / 16;
+					if (num_char < 10) {
+						num_char += 0x30;
+					} else {
+						num_char += 87;
+					}
+					*(buffer_ptr++) = num_char;
+
+				} while (num_l);
+				break;
 
 			case 'b':
 				num_u = va_arg(args, unsigned);
@@ -115,9 +135,7 @@ int vsprintfk(char* format, va_list args) {
 				*(buffer_ptr++)	  = 'b';
 				ptr_brfore_format = buffer_ptr; // 符号不能随数字部分倒序
 				do {
-					num_char		= num_u % 2;
-					num_u			= num_u / 2;
-					*(buffer_ptr++) = num_char + 0x30;
+					SCALE_CHANGE_BELOW_DEC(2);
 
 				} while (num_u);
 				break;
@@ -129,9 +147,7 @@ int vsprintfk(char* format, va_list args) {
 				*(buffer_ptr++)	  = 'o';
 				ptr_brfore_format = buffer_ptr; // 符号不能随数字部分倒序
 				do {
-					num_char		= num_u % 8;
-					num_u			= num_u / 8;
-					*(buffer_ptr++) = num_char + 0x30;
+					SCALE_CHANGE_BELOW_DEC(8);
 
 				} while (num_u);
 				break;
@@ -176,8 +192,8 @@ int vsprintfk(char* format, va_list args) {
 int printk(char* format, ...) {
 	int	 FR_color	 = 0x00ffffff;
 	int	 BK_color	 = 0x00000000;
-	char char_width	 = 8;
-	char char_heigth = 16;
+	char char_width	 = display_info.char_width;
+	char char_heigth = display_info.char_height;
 
 	int x = display_info.col;
 	int y = display_info.row;
@@ -186,14 +202,14 @@ int printk(char* format, ...) {
 	va_start(args, format);
 	int length = vsprintfk(format, args);
 
-	printk_process();
+	PRINTK_PROCESS();
 
 	return length;
 }
 
 int printk_color(char* format, int FR_color, int BK_color, ...) {
-	char char_width	 = 8;
-	char char_heigth = 16;
+	char char_width	 = display_info.char_width;
+	char char_heigth = display_info.char_height;
 
 	int x = display_info.col;
 	int y = display_info.row;
@@ -202,7 +218,7 @@ int printk_color(char* format, int FR_color, int BK_color, ...) {
 	va_start(args, BK_color);
 	int length = vsprintfk(format, args);
 
-	printk_process();
+	PRINTK_PROCESS();
 
 	return length;
 }

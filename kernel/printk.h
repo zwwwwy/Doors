@@ -2,8 +2,8 @@
 #define C_PRINTK_H
 #include <stdarg.h>
 
-void putchar(char ascii_code, int x, int y, int FR_color, int BK_color, char char_width,
-			 char char_heigth);
+void putchark(char ascii_code, int x, int y, int FR_color, int BK_color, char char_width,
+			  char char_heigth);
 
 int printk(char* format, ...);
 int printk_color(char* format, int FR_color, int BK_color, ...);

@@ -24,13 +24,11 @@ _start:
     movq    %rax, %cr3
 
     pushq   $0x08          # 压入段选择子
-    movq    switch_seg(%rip), %rax
+    leaq    entry64(%rip), %rax
     pushq   %rax           # 压入返回地址
     iretq
 
 
-switch_seg:
-    .quad   entry64
 entry64:
     movq    $0x10, %rax
     movq    %rax, %ds
@@ -39,13 +37,62 @@ entry64:
     movq    %rax, %ss
     movq    $0xffff800000007e00, %rsp
 
-    movq    go_to_kernel(%rip), %rax
+    # 初始化idt表的所有向量为int_not_define
+    xorq    %rax, %rax                  # 中断门描述符
+    leaq    int_not_define(%rip), %rdx       # int_not_define地址
+    movl    $0x80000, %eax              # 段选择子
+    movw    %dx, %ax                    # 段内偏移低16位
+    andq    $0xffffffffffff0000, %rdx
+    movw    $0x8e00, %dx
+    movq    %rdx, %rcx
+    shl     $32, %rcx
+    xorq    %rcx, %rax
+    shr     $32, %rdx    
+
+    movq    $256, %rcx
+    leaq    idt_64(%rip), %rdi 
+write_idt:
+    movq    %rax, (%rdi)
+    movq    %rdx, 8(%rdi)
+    addq    $16, %rdi
+    loop    write_idt
+
+
+    # 田宇代码，暂用
+    #-------------------------------------------
+setup_TSS64:
+	leaq	tss_64(%rip),	%rdx
+	xorq	%rax,	%rax
+	xorq	%rcx,	%rcx
+	movq	$0x89,	%rax
+	shlq	$40,	%rax
+	movl	%edx,	%ecx
+	shrl	$24,	%ecx
+	shlq	$56,	%rcx
+	addq	%rcx,	%rax
+	xorq	%rcx,	%rcx
+	movl	%edx,	%ecx
+	andl	$0xffffff,	%ecx
+	shlq	$16,	%rcx
+	addq	%rcx,	%rax
+	addq	$103,	%rax
+	leaq	gdt_64(%rip),	%rdi
+	movq	%rax,	64(%rdi)
+	shrq	$32,	%rdx
+	movq	%rdx,	72(%rdi)
+
+    leaq    setup_kernel(%rip), %rax
+	pushq	$0x08
+	pushq	%rax
+	lretq
+    #-------------------------------------------
+
+    # 进入内核主程序
+    leaq    setup_kernel(%rip), %rax
     pushq   $0x08
     pushq   %rax
     iretq
 
-go_to_kernel:
-    .quad   setup_kernel
 
 # 页表
 .align  8
@@ -133,7 +180,7 @@ gdt_ptr:
     #idt-------------------------------------
 .global idt_64
 idt_64:
-    .fill   512,8,0
+    .fill   512,8,0  # 256,16,0实际的作用是256,8,0...
 idt_64_end:
     
 idt_ptr:

@@ -7,6 +7,8 @@ typedef struct {
 	int	 row;
 	int	 col;
 	int	 BitsPerPixel;
+	int	 char_width;
+	int	 char_height;
 	int* init_cur_pos;
 } display_struct;
 
