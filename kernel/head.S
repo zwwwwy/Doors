@@ -117,6 +117,9 @@ __PDE:
     .quad   0x400083
     .quad   0x600083
     .quad   0x800083
+    .quad   0xa00083
+    .quad   0xc00083
+    .quad   0xe00083
     .quad   0xfd000083
     .quad   0xfd200083
     .quad   0xfd400083
@@ -125,7 +128,7 @@ __PDE:
     .quad   0xfda00083
     .quad   0xfdc00083
     .quad   0xfde00083
-    .fill   499,8,0
+    .fill   496,8,0
 
 .section .data
 

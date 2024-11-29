@@ -65,6 +65,7 @@ write_idt:
 
 
     # 田宇代码，暂用
+    #-------------------------------------------
 setup_TSS64:
  leaq tss_64(%rip), %rdx
  xorq %rax, %rax
@@ -90,6 +91,7 @@ setup_TSS64:
  pushq $0x08
  pushq %rax
  lretq
+    #-------------------------------------------
 
     # 进入内核主程序
     leaq setup_kernel(%rip), %rax
@@ -121,6 +123,9 @@ __PDE:
     .quad 0x400083
     .quad 0x600083
     .quad 0x800083
+    .quad 0xa00083
+    .quad 0xc00083
+    .quad 0xe00083
     .quad 0xfd000083
     .quad 0xfd200083
     .quad 0xfd400083
@@ -129,7 +134,7 @@ __PDE:
     .quad 0xfda00083
     .quad 0xfdc00083
     .quad 0xfde00083
-    .fill 499,8,0
+    .fill 496,8,0
 
 .section .data
 
