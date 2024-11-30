@@ -35,7 +35,7 @@ void int_not_define() {
 
 	unsigned long pc_addr;
 	__asm__ __volatile__("movq 	176(%%rsp),%0\n\t" : "=a"(pc_addr)::"rsp");
-	printk_color("[ERROR]An unknown interrupt or system exception occurred. current PC=%l\n",
+	printk_color("[ERROR]An unknown interrupt or system exception occurred. current PC=%lx\n",
 				 0x00ff0000, 0, pc_addr);
 	while (1)
 		;

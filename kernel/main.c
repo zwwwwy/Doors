@@ -19,14 +19,6 @@ void kernel_start(void) {
 	init_display();
 	init_buffer();
 
-	printk("dec:%d\n", 10);
-	printk("bin:%b\n", 10);
-	printk("oct:%o\n", 10);
-	printk("uuu:%u\n", 10);
-	printk("hex:%x\n", 10);
-	printk("---:%i\n", -10);
-	int i = 1 / 0;
-
 	printk("switch to 64 bits, kernel loaded successfully. printk built successfully.\n");
 	while (1) {
 	};

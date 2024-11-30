@@ -27,10 +27,19 @@ extern buffer_struck  buffer_info;
 	display_info.col = x;                                                                          \
 	display_info.row = y;
 
+// 第二行因为数字部分不随符号倒序
 #define SCALE_CHANGE_BELOW_DEC(scale)                                                              \
-	num_char		= num_u % scale;                                                               \
-	num_u			= num_u / scale;                                                               \
-	*(buffer_ptr++) = num_char + 0x30;
+	ptr_brfore_format = buffer_ptr;                                                                \
+	do {                                                                                           \
+		*(buffer_ptr++) = char_lst[num_l % scale];                                                 \
+		num_l			= num_l / scale;                                                           \
+	} while (num_l);                                                                               \
+	ptr_end_format = buffer_ptr - 1;                                                               \
+	while (ptr_brfore_format < ptr_end_format) {                                                   \
+		char tmp			   = *ptr_end_format;                                                  \
+		*(ptr_end_format--)	   = *ptr_brfore_format;                                               \
+		*(ptr_brfore_format++) = tmp;                                                              \
+	}
 
 void putchark(char ascii_code, int x, int y, int FR_color, int BK_color, char char_width,
 			  char char_heigth) {
@@ -54,9 +63,9 @@ void putchark(char ascii_code, int x, int y, int FR_color, int BK_color, char ch
 
 int vsprintfk(char* format, va_list args) {
 	// 返回格式化后的纯字符数量(含\b,\n,\t等，但不含结尾的0)
-	unsigned	  num_u;
-	char		  num_char;
 	unsigned long num_l;
+
+	char* char_lst = "0123456789abcdef";
 	// 有内存越界风险，不过缓冲区的后面应该没什么东西，暂时不考虑
 	if (buffer_info.current_ptr - buffer_info.init_ptr <= 0) {
 		clear_buffer();
@@ -69,92 +78,96 @@ int vsprintfk(char* format, va_list args) {
 		if (format[i] == '%') {
 
 			char* ptr_brfore_format = buffer_ptr;
+			char* ptr_end_format;
 			switch (format[i + 1]) {
 
 			case 'u':
-				num_u = va_arg(args, unsigned);
-				do {
-					SCALE_CHANGE_BELOW_DEC(10);
-				} while (num_u);
+				num_l = (unsigned)va_arg(args, unsigned);
+				SCALE_CHANGE_BELOW_DEC(10);
 				break;
 
 			case 'i':
 			case 'd':
-				num_u = va_arg(args, unsigned);
-				if (num_u & (1 << 31)) {
-					num_u			  = (~num_u) + 1;
-					*(buffer_ptr++)	  = '-';
-					ptr_brfore_format = buffer_ptr; // 符号不能随数字部分倒序
+				num_l = (unsigned)va_arg(args, unsigned);
+				if (num_l & (1 << 31)) {
+					num_l			= (~(unsigned)num_l) + 1;
+					*(buffer_ptr++) = '-';
 				}
-				do {
-					SCALE_CHANGE_BELOW_DEC(10)
-				} while (num_u);
+				SCALE_CHANGE_BELOW_DEC(10)
 				break;
 
 			case 'x':
-				num_u = va_arg(args, unsigned);
+				num_l = (unsigned)va_arg(args, unsigned);
 
-				*(buffer_ptr++)	  = '0';
-				*(buffer_ptr++)	  = 'x';
-				ptr_brfore_format = buffer_ptr; // 符号不能随数字部分倒序
-				do {
-					num_char = num_u % 16;
-					num_u	 = num_u / 16;
-					if (num_char < 10) {
-						num_char += 0x30;
-					} else {
-						num_char += 87;
-					}
-					*(buffer_ptr++) = num_char;
+				*(buffer_ptr++) = '0';
+				*(buffer_ptr++) = 'x';
+				SCALE_CHANGE_BELOW_DEC(16);
 
-				} while (num_u);
-				break;
-			case 'l':
-				num_l = va_arg(args, unsigned long);
-
-				*(buffer_ptr++)	  = '0';
-				*(buffer_ptr++)	  = 'x';
-				ptr_brfore_format = buffer_ptr; // 符号不能随数字部分倒序
-				do {
-					num_char = num_l % 16;
-					num_l	 = num_l / 16;
-					if (num_char < 10) {
-						num_char += 0x30;
-					} else {
-						num_char += 87;
-					}
-					*(buffer_ptr++) = num_char;
-
-				} while (num_l);
 				break;
 
 			case 'b':
-				num_u = va_arg(args, unsigned);
+				num_l = (unsigned)va_arg(args, unsigned);
 
-				*(buffer_ptr++)	  = '0';
-				*(buffer_ptr++)	  = 'b';
-				ptr_brfore_format = buffer_ptr; // 符号不能随数字部分倒序
-				do {
-					SCALE_CHANGE_BELOW_DEC(2);
+				*(buffer_ptr++) = '0';
+				*(buffer_ptr++) = 'b';
+				SCALE_CHANGE_BELOW_DEC(2);
 
-				} while (num_u);
 				break;
 
 			case 'o':
-				num_u = va_arg(args, unsigned);
+				num_l = (unsigned)va_arg(args, unsigned);
 
-				*(buffer_ptr++)	  = '0';
-				*(buffer_ptr++)	  = 'o';
-				ptr_brfore_format = buffer_ptr; // 符号不能随数字部分倒序
-				do {
+				*(buffer_ptr++) = '0';
+				*(buffer_ptr++) = 'o';
+				SCALE_CHANGE_BELOW_DEC(8);
+
+				break;
+
+			case 'l':
+				num_l = va_arg(args, unsigned long);
+
+				switch (format[i + 2]) {
+				case 'u':
+					SCALE_CHANGE_BELOW_DEC(10);
+					break;
+
+				case 'i':
+				case 'd':
+					if (num_l & ((unsigned long)1 << 63)) {
+						num_l			= (~num_l) + 1;
+						*(buffer_ptr++) = '-';
+					}
+					SCALE_CHANGE_BELOW_DEC(10);
+					break;
+
+				case 'x':
+					*(buffer_ptr++) = '0';
+					*(buffer_ptr++) = 'x';
+					SCALE_CHANGE_BELOW_DEC(16);
+					break;
+
+				case 'b':
+					*(buffer_ptr++) = '0';
+					*(buffer_ptr++) = 'b';
+					SCALE_CHANGE_BELOW_DEC(2);
+					break;
+
+				case 'o':
+					*(buffer_ptr++) = '0';
+					*(buffer_ptr++) = 'o';
 					SCALE_CHANGE_BELOW_DEC(8);
+					break;
+				default:
+					*(buffer_ptr++) = format[i];
+					--i;
+					break;
+				}
+				++i;
 
-				} while (num_u);
 				break;
 
 			case 'c':
-				num_char		= (char)va_arg(args, int);
-				*(buffer_ptr++) = num_char;
+				*(buffer_ptr++) = (char)va_arg(args, int);
 				break;
 
 			case 's':
@@ -162,22 +175,14 @@ int vsprintfk(char* format, va_list args) {
 				for (; *fmt_s_ptr; ++fmt_s_ptr) {
 					*(buffer_ptr++) = *fmt_s_ptr;
 				}
-				ptr_brfore_format = buffer_ptr; // 字符串不倒序
 				break;
 
 			default:
 				*(buffer_ptr++) = format[i];
 				--i;
+				break;
 			}
 			++i;
-			char* ptr_end_format = buffer_ptr - 1;
-
-			// 将数字部分倒序
-			while (ptr_brfore_format < ptr_end_format) {
-				char tmp			   = *ptr_end_format;
-				*(ptr_end_format--)	   = *ptr_brfore_format;
-				*(ptr_brfore_format++) = tmp;
-			}
 		} else {
 			*(buffer_ptr++) = format[i];
 		}
