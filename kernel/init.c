@@ -1,5 +1,6 @@
 #include "init.h"
 #include "info.h"
+#include "printk.h"
 display_struct display_info;
 buffer_struck  buffer_info;
 

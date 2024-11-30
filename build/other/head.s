@@ -43,7 +43,7 @@ entry64:
     movq %rax, %ss
     movq $0xffff800000007e00, %rsp
 
-    # 初始化idt表的所有向量为int_not_define
+    # 初始化idt表的所有向量为int_not_define，type=1110，ist=0，dpl=0，段选择子=8，p=1
     xorq %rax, %rax # 中断门描述符
     leaq int_not_define(%rip), %rdx # int_not_define地址
     movl $0x80000, %eax # 段选择子
@@ -63,35 +63,28 @@ write_idt:
     addq $16, %rdi
     loop write_idt
 
-
-    # 田宇代码，暂用
-    #-------------------------------------------
-setup_TSS64:
+    # 初始化TSS, 段长度=103，type=1001，DPL=0，P=1
+    xorq %rax, %rax
+    xorq %rcx, %rcx
  leaq tss_64(%rip), %rdx
- xorq %rax, %rax
- xorq %rcx, %rcx
- movq $0x89, %rax
- shlq $40, %rax
- movl %edx, %ecx
- shrl $24, %ecx
- shlq $56, %rcx
- addq %rcx, %rax
- xorq %rcx, %rcx
- movl %edx, %ecx
- andl $0xffffff, %ecx
- shlq $16, %rcx
- addq %rcx, %rax
- addq $103, %rax
- leaq gdt_64(%rip), %rdi
- movq %rax, 64(%rdi)
- shrq $32, %rdx
- movq %rdx, 72(%rdi)
-
-    leaq setup_kernel(%rip), %rax
- pushq $0x08
- pushq %rax
- lretq
-    #-------------------------------------------
+    movl %edx, %ecx
+    shr $16, %ecx
+    movb %ch, %al
+    shl $24, %eax
+    andl $0x000000ff, %ecx
+    or $0x00008900, %ecx
+    or %ecx, %eax
+    shl $32, %rax
+    movl %edx, %ecx
+    shl $16, %ecx
+    orq $103, %rax
+    orq %rcx, %rax
+    shr $32, %rdx
+    leaq gdt_64(%rip), %rdi
+    movq %rax, 64(%rdi)
+    movq %rdx, 72(%rdi)
+    movw $64, %ax
+    ltr %ax
 
     # 进入内核主程序
     leaq setup_kernel(%rip), %rax

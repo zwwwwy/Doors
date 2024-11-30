@@ -1,7 +1,7 @@
+#include "info.h"
 #include "init.h"
 #include "printk.h"
 
-#include "info.h"
 extern buffer_struck  buffer_info;
 extern display_struct display_info;
 
@@ -18,8 +18,7 @@ __attribute__((naked)) void setup_kernel() {
 void kernel_start(void) {
 	init_display();
 	init_buffer();
-
-	printk("switch to 64 bits, kernel loaded successfully. printk built successfully.\n");
+	printk_color("aaa", PURE_RED, BLUE);
 	while (1) {
 	};
 }
