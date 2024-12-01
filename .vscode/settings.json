@@ -1,0 +1,9 @@
+{
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/zwy/main/Doors/build/bins",
+            "binaryPath": "/home/zwy/main/Doors/build/bins/system.bin",
+            "binaryArgs": []
+        }
+    ]
+}

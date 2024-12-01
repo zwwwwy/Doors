@@ -1,6 +1,8 @@
 #include "init.h"
 #include "info.h"
 #include "printk.h"
+#include "trap.h"
+
 display_struct display_info;
 buffer_struck  buffer_info;
 
@@ -34,4 +36,9 @@ void init_buffer() {
 		++ptr;
 	}
 	buffer_info.limit = 4096;
+}
+
+void init_trap() {
+	SET_INT_GATE_DPL_0(0, 1, divide_error_entry);
+	return;
 }

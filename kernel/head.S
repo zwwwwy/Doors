@@ -18,7 +18,7 @@ _start:
 	mov	    %ax, %fs
 	mov	    %ax, %gs
 	mov	    %ax, %ss
-	movq	$0x7e00,	%rsp
+	movq	$0x7e00, %rsp
 
     movq    $0x101000, %rax
     movq    %rax, %cr3
