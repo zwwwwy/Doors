@@ -22,8 +22,8 @@ void kernel_start(void) {
 	printk("idt:%lx\n", *(long*)idt_64);
 	printk("idt_addr:%lx\n", idt_64);
 	init_trap();
-	int i = 1 / 0;
-	printk("aaaaaa");
+	/*int i = 1 / 0;*/
+	printk("aaaaa");
 	while (1) {
 	};
 }
