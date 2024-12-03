@@ -21,7 +21,7 @@ void kernel_start(void) {
 	init_buffer();
 	init_trap();
 	/*printk("ccc\n");*/
-	for (int i = 0; i < 800; ++i) {
+	for (int i = 0; i < 8000; ++i) {
 		printk("%d\n", i);
 	}
 	while (1) {

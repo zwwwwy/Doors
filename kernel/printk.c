@@ -258,10 +258,16 @@ void roll_up_line_clean(int n) {
 	int* init_ptr  = display_info.init_cur_pos;
 	int* end_ptr   = init_ptr + display_info.screen_height * display_info.screen_width;
 	int* start_ptr = init_ptr + n * display_info.screen_width * display_info.char_height;
+	int	 count	   = end_ptr - start_ptr;
 
-	while (start_ptr <= end_ptr) {
-		*(init_ptr++)  = *start_ptr;
-		*(start_ptr++) = 0;
-	}
+	// for (int i = 0; i < count; ++i) {
+	//     *(init_ptr++) = *(start_ptr++);
+	//     // *(init_ptr++)  = *start_ptr;
+	//     // *(start_ptr++) = 0;
+	// }
+
+	__asm__ __volatile__("cld\n\t"
+						 "rep movsd\n\t" ::"S"(start_ptr),
+						 "D"(init_ptr), "c"(count));
 	display_info.row -= n > display_info.row ? display_info.row : n;
 }
