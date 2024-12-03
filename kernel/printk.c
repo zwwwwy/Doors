@@ -20,6 +20,14 @@ extern buffer_struck  buffer_info;
 			++y;                                                                                   \
 			--length;                                                                              \
 		} else {                                                                                   \
+			if (x > display_info.max_col - 1) {                                                    \
+				x = 0;                                                                             \
+				--y;                                                                               \
+			}                                                                                      \
+			if (y > display_info.max_row - 1) {                                                    \
+				roll_up_line_clean(1);                                                             \
+				--y;                                                                               \
+			}                                                                                      \
 			putchark(*p, x, y, FR_color, BK_color, char_width, char_heigth);                       \
 			++x;                                                                                   \
 		}                                                                                          \
@@ -243,4 +251,17 @@ void clear_screen() {
 	}
 	display_info.row = 0;
 	display_info.col = 0;
+}
+
+void roll_up_line_clean(int n) {
+	// 滚过的信息被清理，不被缓存
+	int* init_ptr  = display_info.init_cur_pos;
+	int* end_ptr   = init_ptr + display_info.screen_height * display_info.screen_width;
+	int* start_ptr = init_ptr + n * display_info.screen_width * display_info.char_height;
+
+	while (start_ptr <= end_ptr) {
+		*(init_ptr++)  = *start_ptr;
+		*(start_ptr++) = 0;
+	}
+	display_info.row -= n > display_info.row ? display_info.row : n;
 }

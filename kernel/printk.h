@@ -11,5 +11,6 @@ int vsprintfk(char* format, va_list args);
 
 void clear_buffer();
 void clear_screen();
+void roll_up_line_clean(int n);
 
 #endif

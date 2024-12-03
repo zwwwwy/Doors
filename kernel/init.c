@@ -24,6 +24,8 @@ void init_display() {
 	display_info.init_cur_pos  = (int*)0xffff800001000000;
 	display_info.char_width	   = 8;
 	display_info.char_height   = 16;
+	display_info.max_row	   = screen_height / display_info.char_height;
+	display_info.max_col	   = screen_width / display_info.char_width;
 }
 
 void init_buffer() {

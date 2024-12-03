@@ -136,7 +136,7 @@ __attribute__((naked)) void restore_reg() {
 		"popq 	%rax\n\t"
 		"movq 	%rax, %es\n\t"
 		"popq 	%rax\n\t"
-		"addq 	$0x10, %rsp\n\t"
+		"addq 	$0x10, %rsp\n\t" // 弹出错误码和中断处理函数地址
 		"iretq\n\t");
 }
 
@@ -156,9 +156,9 @@ void divide_fault() {
 						 "movq 	%%rsi, %1\n\t"
 						 : "=r"(rsp), "=r"(error_code));
 	blue_screen();
-	printk_color("[ERROR]", PURE_RED, BLUE_SCREEN);
-	printk_color("Division by zero. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLUE_SCREEN, error_code,
-				 *(long*)(rsp + 0x98), rsp);
+	printk_color("[ERROR]", RED, BLUE_SCREEN);
+	printk_color("Division by zero. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLUE_SCREEN,
+				 error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -180,8 +180,8 @@ void debug_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[INT]", WHITE, BLACK);
-	printk_color("Debug interrupt. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 0x98), rsp);
+	printk_color("Debug interrupt. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
+				 *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -203,8 +203,8 @@ void nmi_int() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[INT]", WHITE, BLACK);
-	printk_color("Non-maskable interrupt occurred. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("Non-maskable interrupt occurred. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK,
+				 error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -226,8 +226,8 @@ void breakPoint_trap() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[INT]", WHITE, BLACK);
-	printk_color("Step into a break point. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("Step into a break point. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK,
+				 error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -249,8 +249,8 @@ void overFlow_trap() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[WARNING]", ORANGE, BLACK);
-	printk_color("Arithmetic overflow. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 0x98), rsp);
+	printk_color("Arithmetic overflow. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
+				 *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -272,8 +272,8 @@ void boundsCheck_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[WARNING]", ORANGE, BLACK);
-	printk_color("Array bounds or index out of range. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("Array bounds or index out of range. error_code=%ld, IP=%lx, SP=%lx\n", WHITE,
+				 BLACK, error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -295,8 +295,8 @@ void invalidOpcode_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Invlid or unknown instruction. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("Invlid or unknown instruction. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK,
+				 error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -318,8 +318,8 @@ void deviceNotAvailable_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Co-processor or device unavailable. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("Co-processor or device unavailable. error_code=%ld, IP=%lx, SP=%lx\n", WHITE,
+				 BLACK, error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -343,8 +343,8 @@ void doubleFault_abort() {
 
 	printk_color("[ERROR]", RED, BLACK);
 	printk_color(
-		"Exception triggered while handling another exception. error_code=%ld, IP=%lx, SP=%lx",
-		WHITE, BLACK, error_code, *(long*)(rsp + 0x98), rsp);
+		"Exception triggered while handling another exception. error_code=%ld, IP=%lx, SP=%lx\n",
+		WHITE, BLACK, error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -366,8 +366,8 @@ void coprocessorSegmentOverrun_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[WARNING]", ORANGE, BLACK);
-	printk_color("Access beyond coprocess's segment limit. error_code=%ld, IP=%lx, SP=%lx", WHITE,
-				 BLACK, error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("Access beyond coprocess's segment limit. error_code=%ld, IP=%lx, SP=%lx\n", WHITE,
+				 BLACK, error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -390,8 +390,8 @@ void invalidTSS_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Invlid or corrupted TSS. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("Invlid or corrupted TSS. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK,
+				 error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -414,8 +414,8 @@ void segmentNotPresent_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Access to a non-existent segment. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("Access to a non-existent segment. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK,
+				 error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -438,8 +438,8 @@ void stackSegmentFault_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Error in stack segment access. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("Error in stack segment access. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK,
+				 error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -462,8 +462,8 @@ void generalProtectionFault_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("General protection fault. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("General protection fault. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK,
+				 error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -481,13 +481,41 @@ __attribute__((naked)) void pageFault_fault_handler() {
 void pageFault_fault() {
 	long rsp;
 	long error_code;
+	long cr2;
 	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
 						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+						 "movq 	%%cr2, %2\n\t"
+						 : "=r"(rsp), "=r"(error_code), "=r"(cr2));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Page fault. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 0x98), rsp);
+	if (error_code & 1) {
+		printk_color("Can not access page.", WHITE, BLACK);
+	} else {
+		printk_color("Page not exist.", WHITE, BLACK);
+	}
+
+	printk_color("A page fault caused by ", WHITE, BLACK);
+	if (error_code & 4) {
+		printk_color("user when ", WHITE, BLACK);
+	} else {
+		printk_color("supervisor when ", WHITE, BLACK);
+	}
+
+	if (error_code & 2) {
+		printk_color("writing page.", WHITE, BLACK);
+	} else {
+		printk_color("reading page.", WHITE, BLACK);
+	}
+
+	if (error_code & 8) {
+		printk_color("Reserved bits.", WHITE, BLACK);
+	}
+
+	if (error_code & 16) {
+		printk_color("Getting instruction.", WHITE, BLACK);
+	}
+	printk_color("\nInfo: error_code=%ld, IP=%lx, SP=%lx, CR2=%lx", WHITE, BLACK, error_code,
+				 *(long*)(rsp + 152), rsp, cr2);
 	while (1)
 		;
 }
@@ -510,8 +538,8 @@ void floatPointError_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[WARNING]", ORANGE, BLACK);
-	printk_color("Float point error. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 0x98), rsp);
+	printk_color("Float point error. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
+				 *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -534,8 +562,8 @@ void alignmentCheck_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[WARNING]", ORANGE, BLACK);
-	printk_color("Misaligned memory access. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("Misaligned memory access. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK,
+				 error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -557,8 +585,8 @@ void machineCheck_abort() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Hardware error or malfunction. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 0x98), rsp);
+	printk_color("Hardware error or malfunction. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK,
+				 error_code, *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }
@@ -580,8 +608,8 @@ void SIMDFloatException_fault() {
 						 : "=r"(rsp), "=r"(error_code));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("SIMD float exception. error_code=%ld, IP=%lx, SP=%lx", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 0x98), rsp);
+	printk_color("SIMD float exception. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
+				 *(long*)(rsp + 152), rsp);
 	while (1)
 		;
 }

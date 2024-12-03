@@ -19,11 +19,11 @@ __attribute__((naked)) void setup_kernel() {
 void kernel_start(void) {
 	init_display();
 	init_buffer();
-	printk("idt:%lx\n", *(long*)idt_64);
-	printk("idt_addr:%lx\n", idt_64);
 	init_trap();
-	/*int i = 1 / 0;*/
-	printk("aaaaa");
+	/*printk("ccc\n");*/
+	for (int i = 0; i < 800; ++i) {
+		printk("%d\n", i);
+	}
 	while (1) {
 	};
 }
