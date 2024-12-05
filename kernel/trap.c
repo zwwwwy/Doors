@@ -51,8 +51,7 @@ void int_not_define() {
 void blue_screen() {
 	int* display_ptr = display_info.init_cur_pos;
 	for (int i = 0; i < display_info.screen_width * display_info.screen_height; ++i) {
-		*display_ptr = BLUE_SCREEN;
-		++display_ptr;
+		*(display_ptr++) = BLUE_SCREEN;
 	}
 	init_display();
 	printk_color(
@@ -79,7 +78,8 @@ void set_gate(idt_element* idt_element_addr, unsigned char ist, unsigned short a
 		"movq 	%%rdx, 8(%%rdi)\n\t"
 
 		::"r"((short)(attr << 8)),
-		"r"((short)ist), "a"(idt_element_addr), "d"(func_addr));
+		"r"((short)ist), "a"(idt_element_addr), "d"(func_addr)
+		: "rcx", "rdi");
 }
 
 __attribute__((naked)) void save_reg() {
@@ -116,7 +116,7 @@ __attribute__((naked)) void save_reg() {
 
 __attribute__((naked)) void restore_reg() {
 	__asm__ __volatile__(
-		/*"add 	 $62,%rsp\n\t"*/
+		// "addq   $62,%rsp\n\t"
 		"popq 	%r15\n\t"
 		"popq 	%r14\n\t"
 		"popq 	%r13\n\t"
@@ -486,35 +486,35 @@ void pageFault_fault() {
 						 "movq 	%%rsi, %1\n\t"
 						 "movq 	%%cr2, %2\n\t"
 						 : "=r"(rsp), "=r"(error_code), "=r"(cr2));
-
-	printk_color("[ERROR]", RED, BLACK);
+	blue_screen();
+	printk_color("[ERROR]", RED, BLUE_SCREEN);
 	if (error_code & 1) {
-		printk_color("Can not access page.", WHITE, BLACK);
+		printk_color("Can not access page.", WHITE, BLUE_SCREEN);
 	} else {
-		printk_color("Page not exist.", WHITE, BLACK);
+		printk_color("Page fault in nonpaged area.", WHITE, BLUE_SCREEN);
 	}
 
-	printk_color("A page fault caused by ", WHITE, BLACK);
+	printk_color("A page fault caused by ", WHITE, BLUE_SCREEN);
 	if (error_code & 4) {
-		printk_color("user when ", WHITE, BLACK);
+		printk_color("user when ", WHITE, BLUE_SCREEN);
 	} else {
-		printk_color("supervisor when ", WHITE, BLACK);
+		printk_color("supervisor when ", WHITE, BLUE_SCREEN);
 	}
 
 	if (error_code & 2) {
-		printk_color("writing page.", WHITE, BLACK);
+		printk_color("writing page.", WHITE, BLUE_SCREEN);
 	} else {
-		printk_color("reading page.", WHITE, BLACK);
+		printk_color("reading page.", WHITE, BLUE_SCREEN);
 	}
 
 	if (error_code & 8) {
-		printk_color("Reserved bits.", WHITE, BLACK);
+		printk_color("Reserved bits.", WHITE, BLUE_SCREEN);
 	}
 
 	if (error_code & 16) {
-		printk_color("Getting instruction.", WHITE, BLACK);
+		printk_color("Getting instruction.", WHITE, BLUE_SCREEN);
 	}
-	printk_color("\nInfo: error_code=%ld, IP=%lx, SP=%lx, CR2=%lx", WHITE, BLACK, error_code,
+	printk_color("\nInfo: error_code=%ld, IP=%lx, SP=%lx, CR2=%lx", WHITE, BLUE_SCREEN, error_code,
 				 *(long*)(rsp + 152), rsp, cr2);
 	while (1)
 		;

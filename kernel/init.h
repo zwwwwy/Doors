@@ -3,4 +3,5 @@
 void init_display();
 void init_buffer();
 void init_trap();
+void init_memory();
 #endif

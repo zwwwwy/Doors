@@ -15,22 +15,30 @@
 #define BLUE_C 0x000072b5
 
 typedef struct {
-	int	 screen_width;
-	int	 screen_height;
-	int	 row;
-	int	 col;
-	int	 BitsPerPixel;
-	int	 char_width;
-	int	 char_height;
-	int	 max_row;
-	int	 max_col;
-	int* init_cur_pos;
+	unsigned int screen_width;
+	unsigned int screen_height;
+	unsigned int row;
+	unsigned int col;
+	unsigned int BitsPerPixel;
+	unsigned int char_width;
+	unsigned int char_height;
+	unsigned int max_row;
+	unsigned int max_col;
+	int*		 init_cur_pos;
 } display_struct;
 
 typedef struct {
-	void* init_ptr;
-	void* current_ptr;
-	int	  limit;
+	void*		 init_ptr;
+	void*		 current_ptr;
+	unsigned int limit;
 } buffer_struck;
+
+typedef struct {
+	unsigned int addr1;
+	unsigned int addr2;
+	unsigned int len1;
+	unsigned int len2;
+	unsigned int type;
+} memory_info;
 
 #endif

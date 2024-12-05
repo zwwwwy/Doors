@@ -20,8 +20,9 @@ void kernel_start(void) {
 	init_display();
 	init_buffer();
 	init_trap();
-	/*printk("ccc\n");*/
-	for (int i = 0; i < 8000; ++i) {
+	init_memory();
+	// int i = *(int*)0xffffffffffffffff;
+	for (int i = 0; i < 80000; ++i) {
 		printk("%d\n", i);
 	}
 	while (1) {

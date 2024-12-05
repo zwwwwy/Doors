@@ -64,3 +64,20 @@ void init_trap() {
 	// 20-31 Intel保留
 	return;
 }
+
+void init_memory() {
+	memory_info*  ptr	  = (memory_info*)0xffff800000090200;
+	unsigned long all_mem = 0;
+	unsigned long addr;
+	unsigned long len;
+	for (int i = 0; i < 32; ++i) {
+		addr = ((unsigned long)(ptr->addr2) << 32) + ptr->addr1;
+		len	 = ((unsigned long)(ptr->len2) << 32) + ptr->len1;
+		printk("address:%lx, len:%ld, type:%d\n", addr, len, ptr->type);
+		if (ptr->type == 1) {
+			all_mem += len;
+		}
+		++ptr;
+	}
+	printk("memory: %ld", all_mem);
+}
