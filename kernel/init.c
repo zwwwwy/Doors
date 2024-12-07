@@ -1,10 +1,13 @@
 #include "init.h"
 #include "info.h"
+#include "mmu.h"
 #include "printk.h"
 #include "trap.h"
 
-display_struct display_info;
-buffer_struck  buffer_info;
+display_struct	  display_info;
+buffer_struck	  buffer_info;
+memory_descriptor mmu_struct;
+memory_info		  memory_info_struct;
 
 void init_display() {
 	unsigned short screen_width;
@@ -66,18 +69,48 @@ void init_trap() {
 }
 
 void init_memory() {
-	memory_info*  ptr	  = (memory_info*)0xffff800000090200;
-	unsigned long all_mem = 0;
-	unsigned long addr;
-	unsigned long len;
+	extern char _text;
+	extern char _etext;
+	extern char _edata;
+	extern char _end;
+	mmu_struct.start_code = (unsigned long)&_text;
+	mmu_struct.end_code	  = (unsigned long)&_etext;
+	mmu_struct.end_data	  = (unsigned long)&_edata;
+	mmu_struct.end_brk	  = (unsigned long)&_end;
+	// type=1为ram，type=2为rom
+	memory_info* memory_info_ptr = (memory_info*)0xffff800000090200;
+	mmu_struct.memory_info_array = &memory_info_struct;
+
+	unsigned long mem_sum  = 0;
+	unsigned long page_sum = 0;
+	unsigned long mem_start;
 	for (int i = 0; i < 32; ++i) {
-		addr = ((unsigned long)(ptr->addr2) << 32) + ptr->addr1;
-		len	 = ((unsigned long)(ptr->len2) << 32) + ptr->len1;
-		printk("address:%lx, len:%ld, type:%d\n", addr, len, ptr->type);
-		if (ptr->type == 1) {
-			all_mem += len;
+		if (memory_info_ptr->type == 0) {
+			break;
 		}
-		++ptr;
+
+		// 将0x90200处的内存信息转存至内核
+		mmu_struct.memory_info_array[i].addr = memory_info_ptr->addr;
+		mmu_struct.memory_info_array[i].len	 = memory_info_ptr->len;
+		mmu_struct.memory_info_array[i].type = memory_info_ptr->type;
+		mmu_struct.memory_info_length		 = i + 1;
+
+		printk("address:%lx->%lx, len:%ld, type:%d\n", memory_info_ptr->addr,
+			   memory_info_ptr->addr + memory_info_ptr->len, memory_info_ptr->len,
+			   memory_info_ptr->type);
+
+		// 计算RAM区域的帧总数
+		if (memory_info_ptr->type == 1) {
+			mem_sum += memory_info_ptr->len;
+			mem_start = ALIGN_PAGE(memory_info_ptr->addr);
+			page_sum +=
+				(memory_info_ptr->addr + memory_info_ptr->len - mem_start) >> BITS_OF_OFFSET;
+		}
 	}
-	printk("memory: %ld", all_mem);
+	printk("memory: %ld, pages: %ld\n", mem_sum, page_sum);
+
+	printk("start_code:%lx\n", mmu_struct.start_code);
+	printk("start_code:%lx\n", mmu_struct.end_code);
+	printk("start_code:%lx\n", mmu_struct.end_data);
+	printk("start_code:%lx\n", mmu_struct.end_brk);
 }
