@@ -1,5 +1,6 @@
 #ifndef C_MMU_H
 #define C_MMU_H
+#include "info.h"
 
 /***************************************************
  * IA-32e下虚拟地址结构
@@ -19,5 +20,40 @@
 #define PAGE_ADDR_MASK (~PAGE_OFFSET_MASK)
 // 将每页与2M对齐
 #define ALIGN_PAGE(addr) (addr + PAGE_OFFSET_SIZE - 1) & PAGE_ADDR_MASK
+// 基于info.h中的信息
+#define MARK_BITS_MAP(bit_map, addr)                                           \
+  *(bit_map + (addr >> BITS_OF_OFFSET) / 64) |=                                \
+      1ul << ((addr >> BITS_OF_OFFSET) % 64);
+#define UNMARK_BITS_MAP(bit_map, addr)                                         \
+  *(bit_map + (addr >> BITS_OF_OFFSET) / 64) ^=                                \
+      1ul << ((addr >> BITS_OF_OFFSET) % 64);
+#define UNMARK_BITS_MAP_ABS(bit_map, addr)                                     \
+  *(bit_map + (addr >> BITS_OF_OFFSET) / 64) &=                                \
+      ~(1ul << ((addr >> BITS_OF_OFFSET) % 64));
 
+#define BITS_OF_OFFSET_4k 12
+#define PAGE_OFFSET_SIZE_4k (1lu << BITS_OF_OFFSET_4k)
+#define PAGE_OFFSET_MASK_4k (PAGE_OFFSET_SIZE_4k - 1)
+#define PAGE_ADDR_MASK_4k (~PAGE_OFFSET_MASK_4k)
+#define ALIGN_PAGE_4k(addr) (addr + PAGE_OFFSET_SIZE_4k - 1) & PAGE_ADDR_MASK_4k
+
+// 区域属性
+#define ZONE_DMA 1
+#define ZONE_NORMAL (1 << 1)
+#define ZONE_UNMAPED (1 << 2)
+
+// 页属性
+#define PAGE_PTABLE_MAPED 1
+#define PAGE_KERNEL_INIT (1 << 1)
+#define PAGE_REFERENCED (1 << 2)
+#define PAGE_DIRTY (1 << 3)
+#define PAGE_ACTIVE (1 << 4)
+#define PAGE_UP_TO_DATE (1 << 5)
+#define PAGE_DEVICE (1 << 6)
+#define PAGE_KERNEL (1 << 7)
+#define PAGE_K_SHARE_TO_U (1 << 8)
+#define PAGE_SLAB (1 << 9)
+
+unsigned long init_page(page_struct *page, unsigned long attr);
+unsigned long clean_page(page_struct *page);
 #endif

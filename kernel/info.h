@@ -55,8 +55,8 @@ typedef struct page_struct {
 typedef struct zone_struct {
 	struct memory_descriptor* memory_descriptor_ptr;
 
-	struct page_struct* pages_array_array; // 区域页面描述符数组
-	unsigned long		pages_length;	   // 区域页面描述符数组长度
+	struct page_struct* pages_array;  // 区域页面描述符数组
+	unsigned long		pages_length; // 区域页面描述符数组长度
 
 	unsigned long start_addr;  // 区域起始地址
 	unsigned long end_addr;	   // 区域终止地址
@@ -72,17 +72,17 @@ typedef struct memory_descriptor {
 	struct memory_info* memory_info_array;
 	unsigned long		memory_info_length;
 
-	unsigned long* bits_map;
-	unsigned long  bits_length;
-	unsigned long  bits_size;
+	unsigned long* bits_map_array;
+	unsigned long  bits_length; // 字节大小
+	unsigned long  bits_size;	// 数量大小
 
 	struct page_struct* pages_array;
 	unsigned long		pages_length;
 	unsigned long		pages_size;
 
-	struct zone_struct zones_array;
-	unsigned long	   zones_length;
-	unsigned long	   zones_size;
+	struct zone_struct* zones_array;
+	unsigned long		zones_length;
+	unsigned long		zones_size;
 
 	unsigned long start_code;	 // 内核程序起始代码段地址
 	unsigned long end_code;		 // 内核程序结束代码段地址

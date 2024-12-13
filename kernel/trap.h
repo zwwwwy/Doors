@@ -6,8 +6,19 @@ typedef struct {
 } idt_element;
 extern idt_element idt_64[];
 
+/*
+ * n:		  中断号
+ * ist:		  ist区的值，为0表示采用保护模式的段切换方式
+ * func_addr: 中断处理函数地址
+ */
 #define SET_INT_GATE_DPL_0(n, ist, func_addr) set_gate(idt_64 + n, ist, 0x8e, func_addr)
 
+/*
+ * idt_element:	要设定的门的地址
+ * ist: 		ist区域的值
+ * attr: 		八位，p/dpl/0/type
+ * func_addr: 	中断处理函数地址
+ */
 void set_gate(idt_element* idt_element, unsigned char ist, unsigned short attr, void* func_addr);
 
 void __stack_chk_fail(void);
