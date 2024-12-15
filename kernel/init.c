@@ -1,7 +1,7 @@
 #include "init.h"
 #include "../lib/string.h"
 #include "info.h"
-#include "mmu.h"
+#include "memory.h"
 #include "printk.h"
 #include "trap.h"
 
@@ -10,6 +10,7 @@ buffer_struck	  buffer_info;
 memory_descriptor mmu_struct;
 memory_info		  memory_info_struct;
 char			  print_buffer[4096];
+unsigned long*	  GLOBAL_CR3;
 
 void init_display()
 {
@@ -107,10 +108,7 @@ void init_memory()
 		mmu_struct.memory_info_array[i].addr = memory_info_ptr->addr;
 		mmu_struct.memory_info_array[i].len	 = memory_info_ptr->len;
 		mmu_struct.memory_info_array[i].type = memory_info_ptr->type;
-		mmu_struct.memory_info_length		 = i + 1;
-
-		printk("address:%lx->%lx, len:%ld, type:%d\n", memory_info_ptr->addr,
-			   memory_info_ptr->addr + memory_info_ptr->len, memory_info_ptr->len, memory_info_ptr->type);
+		mmu_struct.memory_info_size			 = i + 1;
 
 		mem_sum += memory_info_ptr->len;
 		mem_start = ALIGN_PAGE(memory_info_ptr->addr);
@@ -118,29 +116,27 @@ void init_memory()
 		++memory_info_ptr;
 	}
 
-	// 分配位图空间
+	// 分配位图空间(可能不整除，向上取整)
 	mmu_struct.bits_map_array = (unsigned long*)(ALIGN_PAGE_4k(mmu_struct.end_brk));
 	mmu_struct.bits_size	  = mem_sum >> BITS_OF_OFFSET;
-	mmu_struct.bits_length =
-		(((unsigned long)(mem_sum >> BITS_OF_OFFSET) + sizeof(long) * 8 - 1) / 8) & (~(sizeof(long) - 1));
+	mmu_struct.bits_length = (((unsigned long)mmu_struct.bits_size + sizeof(long) * 8 - 1) / 8) & (~(sizeof(long) - 1));
 	memset(mmu_struct.bits_map_array, 0xff, mmu_struct.bits_length);
 
 	// 分配页表空间
 	mmu_struct.pages_array =
-		(page_struct*)(ALIGN_PAGE_4k((unsigned long)mmu_struct.bits_map_array + mmu_struct.bits_length));
-	mmu_struct.pages_size = mem_sum >> BITS_OF_OFFSET;
-	mmu_struct.pages_length =
-		((mem_sum >> BITS_OF_OFFSET) * sizeof(page_struct) + sizeof(long) - 1) & (~(sizeof(long) - 1));
+		(page_struct*)(ALIGN_PAGE_4k((unsigned long)(mmu_struct.bits_map_array + mmu_struct.bits_length)));
+	mmu_struct.pages_size	= mem_sum >> BITS_OF_OFFSET;
+	mmu_struct.pages_length = mmu_struct.pages_size * sizeof(page_struct);
 	memset(mmu_struct.pages_array, 0, mmu_struct.pages_length);
 
 	// 分配区域空间
 	mmu_struct.zones_array =
-		(zone_struct*)(ALIGN_PAGE_4k((unsigned long)mmu_struct.pages_array + mmu_struct.pages_length));
+		(zone_struct*)(ALIGN_PAGE_4k((unsigned long)(mmu_struct.pages_array + mmu_struct.pages_length)));
 	mmu_struct.zones_size	= 0; // 同时用作下方初始化zone时的数组下标
-	mmu_struct.zones_length = (ram_zone_count * sizeof(zone_struct) + sizeof(long) - 1) & (~(sizeof(long) - 1));
+	mmu_struct.zones_length = ram_zone_count * sizeof(zone_struct);
 	memset(mmu_struct.zones_array, 0, mmu_struct.zones_length);
 
-	for (int i = 0; i < mmu_struct.memory_info_length; ++i)
+	for (int i = 0; i < mmu_struct.memory_info_size; ++i)
 	{
 		if (mmu_struct.memory_info_array[i].type != 1)
 		{
@@ -166,11 +162,11 @@ void init_memory()
 		zone->page_free_count		= zone->zone_length >> BITS_OF_OFFSET;
 		zone->page_ref_count_sum	= 0;
 		zone->pages_array			= (page_struct*)(mmu_struct.pages_array + (start >> BITS_OF_OFFSET));
-		zone->pages_length			= zone->page_free_count;
+		zone->pages_size			= zone->page_free_count;
 
 		// 初始化page并复位其在位图中的位置
 		page_struct* page = zone->pages_array;
-		for (int j = 0; j < zone->pages_length; ++j, ++page)
+		for (int j = 0; j < zone->pages_size; ++j, ++page)
 		{
 			page->zone_struct_ptr = zone;
 			page->addr_phy		  = start + PAGE_OFFSET_SIZE * j;
@@ -187,22 +183,14 @@ void init_memory()
 	mmu_struct.pages_array[0].attr			  = 0;
 	mmu_struct.pages_array[0].reference_count = 0;
 	mmu_struct.pages_array[0].age			  = 0;
+	mmu_struct.end_of_struct =
+		(unsigned long)(ALIGN_PAGE_4k((unsigned long)mmu_struct.zones_array + mmu_struct.zones_length));
 
-	// printk("\nbit map:%lx, bit length=%ld, bit size=%ld\n", mmu_struct.bits_map_array, mmu_struct.bits_length,
-	//        mmu_struct.bits_size);
-	// printk("page array:%lx, page length:%ld, page size:%ld\n", mmu_struct.pages_array, mmu_struct.pages_length,
-	//        mmu_struct.pages_size);
-	// printk("zone array:%lx, zone length:%ld, zone size:%ld\n", mmu_struct.zones_array, mmu_struct.zones_length,
-	//        mmu_struct.zones_size);
-
-	printk("\n");
-	for (int i = 0; i < mmu_struct.zones_size; ++i)
+	// 初始化mmu_struct前所有页的属性
+	for (int i = 0; i <= VIRT2PHY(mmu_struct.end_of_struct) >> BITS_OF_OFFSET; ++i)
 	{
-		zone_struct zone = mmu_struct.zones_array[i];
-		for (int j = 0; j < zone.pages_length; ++j)
-		{
-			page_struct page = zone.pages_array[j];
-			printk("page addr:%lx\n", page.addr_phy);
-		}
+		init_page(mmu_struct.pages_array + i, PAGE_PTABLE_MAPED | PAGE_KERNEL_INIT | PAGE_ACTIVE | PAGE_KERNEL);
 	}
+
+	__asm__ __volatile__("movq	%%cr3, %0" : "=r"(GLOBAL_CR3)::"memory");
 }

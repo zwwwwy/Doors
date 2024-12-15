@@ -1,7 +1,7 @@
 #include "info.h"
 #include "init.h"
+#include "memory.h"
 #include "printk.h"
-#include "trap.h"
 
 extern buffer_struck  buffer_info;
 extern display_struct display_info;
@@ -23,11 +23,15 @@ void kernel_start(void)
 	init_buffer();
 	init_trap();
 	init_memory();
-	// int i = *(int*)0xffffffffffffffff;
-	// for (int i = 0; i < 80000; ++i) {
-	//     printk("%d\n", i);
-	// }
+
+	page_struct* p = alloc_a_page(PAGE_KERNEL_INIT);
+	clean_page(p);
+	page_struct* p1 = alloc_a_page(PAGE_KERNEL_INIT);
+	page_struct* p2 = alloc_a_page(PAGE_KERNEL_INIT);
+
+	printk("p1.addr:%lx\n", p->addr_phy);
+	printk("p2.addr:%lx\n", p1->addr_phy);
+	printk("p3.addr:%lx\n", p2->addr_phy);
 	while (1)
-	{
-	};
+		;
 }

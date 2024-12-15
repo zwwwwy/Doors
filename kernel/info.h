@@ -15,7 +15,8 @@
 #define BLUE_C 0x000072b5
 
 // 用于描述显存区及一些显示信息
-typedef struct {
+typedef struct
+{
 	unsigned int screen_width;
 	unsigned int screen_height;
 	unsigned int row;
@@ -29,21 +30,24 @@ typedef struct {
 } display_struct;
 
 // 用于描述内核io缓冲区的情况
-typedef struct {
+typedef struct
+{
 	void*		 init_ptr;
 	void*		 current_ptr;
 	unsigned int limit;
 } buffer_struck;
 
 // 用于获取0x90200处存放的在loader中获取的内存信息
-typedef struct __attribute__((packed)) memory_info {
+typedef struct __attribute__((packed)) memory_info
+{
 	unsigned long addr;
 	unsigned long len;
 	unsigned int  type;
 } memory_info;
 
 // 单一页面描述符
-typedef struct page_struct {
+typedef struct page_struct
+{
 	struct zone_struct* zone_struct_ptr;
 	unsigned long		addr_phy;
 	unsigned long		attr;
@@ -52,11 +56,12 @@ typedef struct page_struct {
 } page_struct;
 
 // 单一区域描述符
-typedef struct zone_struct {
+typedef struct zone_struct
+{
 	struct memory_descriptor* memory_descriptor_ptr;
 
 	struct page_struct* pages_array;  // 区域页面描述符数组
-	unsigned long		pages_length; // 区域页面描述符数组长度
+	unsigned long		pages_size; // 区域页面描述符数组长度
 
 	unsigned long start_addr;  // 区域起始地址
 	unsigned long end_addr;	   // 区域终止地址
@@ -68,9 +73,10 @@ typedef struct zone_struct {
 	unsigned long page_ref_count_sum; // 区域物理页被引用次数
 } zone_struct;
 
-typedef struct memory_descriptor {
+typedef struct memory_descriptor
+{
 	struct memory_info* memory_info_array;
-	unsigned long		memory_info_length;
+	unsigned long		memory_info_size;
 
 	unsigned long* bits_map_array;
 	unsigned long  bits_length; // 字节大小
