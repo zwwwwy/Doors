@@ -65,4 +65,6 @@
 unsigned long init_page(page_struct* page, unsigned long attr);
 unsigned long clean_page(page_struct* page);
 page_struct*  alloc_a_page(unsigned long page_attr);
+// num<=64
+page_struct* alloc_pages(unsigned int num, unsigned long page_attr);
 #endif

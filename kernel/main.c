@@ -24,8 +24,8 @@ void kernel_start(void)
 	init_trap();
 	init_memory();
 
-	page_struct* p = alloc_a_page(PAGE_KERNEL_INIT);
-	clean_page(p);
+	page_struct* p = alloc_pages(10, PAGE_KERNEL_INIT);
+	clean_page(p + 5);
 	page_struct* p1 = alloc_a_page(PAGE_KERNEL_INIT);
 	page_struct* p2 = alloc_a_page(PAGE_KERNEL_INIT);
 

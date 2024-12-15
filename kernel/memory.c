@@ -62,17 +62,20 @@ unsigned long clean_page(page_struct* page)
 
 page_struct* alloc_a_page(unsigned long page_attr)
 {
-	page_struct* page;
-
+	zone_struct*  zone;
+	unsigned long idx;
+	unsigned long offset;
+	unsigned long bit_map;
+	unsigned long k;
 	for (int i = 0; i < mmu_struct.zones_size; ++i)
 	{
-		zone_struct* zone = mmu_struct.zones_array + i;
+		zone = mmu_struct.zones_array + i;
 		if (zone->page_free_count < 1)
 			continue;
-		unsigned long idx	  = ((zone->pages_array->addr_phy) >> BITS_OF_OFFSET) / 64;
-		unsigned long offset  = ((zone->pages_array->addr_phy) >> BITS_OF_OFFSET) % 64;
-		unsigned long bit_map = *(mmu_struct.bits_map_array + idx);
-		unsigned long k		  = 0; // 用于统计当前区域的绝对页号，假设页在区域的分布是线性的
+		idx		= ((zone->pages_array->addr_phy) >> BITS_OF_OFFSET) / 64;
+		offset	= ((zone->pages_array->addr_phy) >> BITS_OF_OFFSET) % 64;
+		bit_map = *(mmu_struct.bits_map_array + idx);
+		k		= 0; // 用于统计当前区域的绝对页号，假设页在区域的分布是线性的
 		while ((1ul << offset) & bit_map)
 		{
 			if (offset == 63)
@@ -88,11 +91,58 @@ page_struct* alloc_a_page(unsigned long page_attr)
 			}
 		}
 
-		page		   = zone->pages_array + k;
-		page->addr_phy = (idx * 64 + offset) << BITS_OF_OFFSET;
+		page_struct* page = zone->pages_array + k;
+		page->addr_phy	  = (idx * 64 + offset) << BITS_OF_OFFSET;
 		init_page(page, page_attr);
 		return page;
 	}
 
+	return NULL;
+}
+
+page_struct* alloc_pages(unsigned int num, unsigned long page_attr)
+{
+	unsigned long mask = 0;
+	zone_struct*  zone;
+	unsigned long idx;
+	unsigned long offset;
+	unsigned long bit_map;
+	unsigned long k;
+	for (int i = 0; i < num; ++i)
+	{
+		mask |= 1;
+		mask <<= 1;
+	}
+	for (int i = 0; i < mmu_struct.zones_size; ++i)
+	{
+		zone = mmu_struct.zones_array + i;
+		if (zone->page_free_count < 1)
+			continue;
+		idx		= ((zone->pages_array->addr_phy) >> BITS_OF_OFFSET) / 64;
+		offset	= ((zone->pages_array->addr_phy) >> BITS_OF_OFFSET) % 64;
+		bit_map = *(mmu_struct.bits_map_array + idx);
+		k		= 0;
+		while (((mask >> (64 - offset)) | (mask << offset)) & bit_map)
+		{
+			if (offset == 63)
+			{
+				bit_map = *(mmu_struct.bits_map_array + (++idx));
+				offset	= 0;
+				++k;
+			}
+			else
+			{
+				++offset;
+				++k;
+			}
+		}
+		page_struct* pages = zone->pages_array + k;
+		for (int i = 0; i < num; ++i)
+		{
+			(pages + i)->addr_phy = (idx * 64 + offset + i) << BITS_OF_OFFSET;
+			init_page(pages + i, page_attr);
+		}
+		return pages;
+	}
 	return NULL;
 }
