@@ -139,7 +139,8 @@ page_struct* alloc_pages(unsigned int num, unsigned long page_attr)
 		page_struct* pages = zone->pages_array + k;
 		for (int i = 0; i < num; ++i)
 		{
-			(pages + i)->addr_phy = (idx * 64 + offset + i) << BITS_OF_OFFSET;
+			// 初始化时已经在init_memory中把所有页属性结构体中的地址属性赋值好了，这里无需重复
+			// (pages + i)->addr_phy = (idx * 64 + offset + i) << BITS_OF_OFFSET;
 			init_page(pages + i, page_attr);
 		}
 		return pages;

@@ -20,7 +20,7 @@
 #define PAGE_ADDR_MASK (~PAGE_OFFSET_MASK)
 
 // 将每页与2M对齐
-#define ALIGN_PAGE(addr) (addr + PAGE_OFFSET_SIZE - 1) & PAGE_ADDR_MASK
+#define ALIGN_PAGE(addr) (addr + PAGE_OFFSET_MASK) & PAGE_ADDR_MASK
 
 // 基于info.h中的信息
 #define MARK_BITS_MAP(bit_map, addr)                                                                                   \
@@ -37,7 +37,7 @@
 #define PAGE_OFFSET_SIZE_4k (1lu << BITS_OF_OFFSET_4k)
 #define PAGE_OFFSET_MASK_4k (PAGE_OFFSET_SIZE_4k - 1)
 #define PAGE_ADDR_MASK_4k (~PAGE_OFFSET_MASK_4k)
-#define ALIGN_PAGE_4k(addr) (addr + PAGE_OFFSET_SIZE_4k - 1) & PAGE_ADDR_MASK_4k
+#define ALIGN_PAGE_4k(addr) (addr + PAGE_OFFSET_MASK_4k) & PAGE_ADDR_MASK_4k
 
 // 区域属性
 #define ZONE_DMA 1

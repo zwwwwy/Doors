@@ -37,7 +37,7 @@ void init_display()
 
 void init_buffer()
 {
-	char* ptr = print_buffer;
+	char* ptr = (char*)0xffff800000010000;
 
 	buffer_info.init_ptr	= (void*)ptr;
 	buffer_info.current_ptr = (void*)ptr;
@@ -110,12 +110,22 @@ void init_memory()
 		mmu_struct.memory_info_array[i].type = memory_info_ptr->type;
 		mmu_struct.memory_info_size			 = i + 1;
 
+		// printk("address:%lx->%lx, len:%ld, type:%d\n", memory_info_ptr->addr,
+		//        memory_info_ptr->addr + memory_info_ptr->len, memory_info_ptr->len, memory_info_ptr->type);
+
 		mem_sum += memory_info_ptr->len;
 		mem_start = ALIGN_PAGE(memory_info_ptr->addr);
-		page_sum += (memory_info_ptr->addr + memory_info_ptr->len - mem_start) >> BITS_OF_OFFSET;
+		page_sum +=
+			(((memory_info_ptr->addr + memory_info_ptr->len) >> BITS_OF_OFFSET) - (mem_start >> BITS_OF_OFFSET));
 		++memory_info_ptr;
 	}
 
+	/*
+	 * 线性物理地址空间中间存在空洞，由于位图和页属性结构体是根据线性物理地址寻址的，所以用各区域内存长度之和加总
+	 * 在寻址过程中可能会越界(物理地址号大于物理地址数)，所以要以最后一个区域的末端地址来确定各结构体数组的范围。
+	 */
+	mem_sum = mmu_struct.memory_info_array[mmu_struct.memory_info_size - 1].addr +
+			  mmu_struct.memory_info_array[mmu_struct.memory_info_size - 1].len;
 	// 分配位图空间(可能不整除，向上取整)
 	mmu_struct.bits_map_array = (unsigned long*)(ALIGN_PAGE_4k(mmu_struct.end_brk));
 	mmu_struct.bits_size	  = mem_sum >> BITS_OF_OFFSET;
@@ -124,14 +134,14 @@ void init_memory()
 
 	// 分配页表空间
 	mmu_struct.pages_array =
-		(page_struct*)(ALIGN_PAGE_4k((unsigned long)(mmu_struct.bits_map_array + mmu_struct.bits_length)));
+		(page_struct*)(ALIGN_PAGE_4k((unsigned long)mmu_struct.bits_map_array + mmu_struct.bits_length));
 	mmu_struct.pages_size	= mem_sum >> BITS_OF_OFFSET;
 	mmu_struct.pages_length = mmu_struct.pages_size * sizeof(page_struct);
 	memset(mmu_struct.pages_array, 0, mmu_struct.pages_length);
 
 	// 分配区域空间
 	mmu_struct.zones_array =
-		(zone_struct*)(ALIGN_PAGE_4k((unsigned long)(mmu_struct.pages_array + mmu_struct.pages_length)));
+		(zone_struct*)(ALIGN_PAGE_4k((unsigned long)mmu_struct.pages_array + mmu_struct.pages_length));
 	mmu_struct.zones_size	= 0; // 同时用作下方初始化zone时的数组下标
 	mmu_struct.zones_length = ram_zone_count * sizeof(zone_struct);
 	memset(mmu_struct.zones_array, 0, mmu_struct.zones_length);
@@ -144,13 +154,13 @@ void init_memory()
 		}
 
 		unsigned long start = ALIGN_PAGE(mmu_struct.memory_info_array[i].addr);
-		unsigned long end	= (start + mmu_struct.memory_info_array[i].len) & PAGE_ADDR_MASK;
+		unsigned long end =
+			(mmu_struct.memory_info_array[i].addr + mmu_struct.memory_info_array[i].len) & PAGE_ADDR_MASK;
 		// 实际来看第一个区域大小不够分一个大页
 		if (start >= end)
 		{
 			continue;
 		}
-
 		// 初始化zone
 		zone_struct* zone			= mmu_struct.zones_array + (mmu_struct.zones_size++);
 		zone->memory_descriptor_ptr = &mmu_struct;

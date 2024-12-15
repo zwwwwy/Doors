@@ -3,8 +3,9 @@
 #include "memory.h"
 #include "printk.h"
 
-extern buffer_struck  buffer_info;
-extern display_struct display_info;
+extern buffer_struck	 buffer_info;
+extern display_struct	 display_info;
+extern memory_descriptor mmu_struct;
 
 __attribute__((naked)) void setup_kernel()
 {
@@ -32,6 +33,7 @@ void kernel_start(void)
 	printk("p1.addr:%lx\n", p->addr_phy);
 	printk("p2.addr:%lx\n", p1->addr_phy);
 	printk("p3.addr:%lx\n", p2->addr_phy);
+
 	while (1)
 		;
 }
