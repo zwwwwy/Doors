@@ -1,8 +1,8 @@
 #include "init.h"
 #include "../lib/string.h"
 #include "info.h"
+#include "int.h"
 #include "memory.h"
-#include "printk.h"
 #include "trap.h"
 
 display_struct	  display_info;
@@ -73,6 +73,26 @@ void init_trap()
 	SET_INT_GATE_DPL_0(19, 0, SIMDFloatException_fault_handler);
 	// 20-31 Intel保留
 	return;
+}
+
+void init_irq()
+{
+	extern void (*interrupt[24])(void);
+	for (int i = 0x20; i < 0x38; ++i)
+	{
+		SET_INT_GATE_DPL_0(i, 0, interrupt[i - 0x20]);
+	}
+	io_out8(0x20, 0x11);
+	io_out8(0x21, 0x20);
+	io_out8(0x21, 0x04);
+	io_out8(0x21, 0x01);
+	io_out8(0xa0, 0x11);
+	io_out8(0xa1, 0x28);
+	io_out8(0xa1, 0x02);
+	io_out8(0xa1, 0x01);
+	io_out8(0x21, 0x00);
+	io_out8(0xa1, 0x00);
+	__asm__ __volatile__("sti");
 }
 
 void init_memory()

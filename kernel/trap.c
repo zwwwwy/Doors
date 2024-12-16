@@ -42,11 +42,8 @@ void int_not_define()
 
 	unsigned long ip_addr;
 	__asm__ __volatile__("movq 	176(%%rsp),%0\n\t" : "=r"(ip_addr) :);
-	blue_screen();
-	printk_color("[WARNING]", ORANGE, BLUE_SCREEN);
-	printk_color("An unknown interrupt or system exception occurred. current IP=%lx\n", WHITE, BLUE_SCREEN, ip_addr);
-	while (1)
-		;
+	printk_color("[WARNING]", ORANGE, BLACK);
+	printk_color("An unknown interrupt or system exception occurred. current IP=%lx\n", WHITE, BLACK, ip_addr);
 }
 
 void blue_screen()

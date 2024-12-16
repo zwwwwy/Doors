@@ -5,4 +5,5 @@ void init_display();
 void init_buffer();
 void init_trap();
 void init_memory();
+void init_irq();
 #endif
