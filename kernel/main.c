@@ -26,6 +26,11 @@ void kernel_start(void)
 	init_memory();
 	init_irq();
 
+	for (int i = 0; i < 10000000; ++i)
+	{
+		printk("%d\n", i);
+	}
+
 	while (1)
 		;
 }

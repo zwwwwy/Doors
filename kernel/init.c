@@ -37,7 +37,7 @@ void init_display()
 
 void init_buffer()
 {
-	char* ptr = (char*)0xffff800000010000;
+	char* ptr = (char*)print_buffer;
 
 	buffer_info.init_ptr	= (void*)ptr;
 	buffer_info.current_ptr = (void*)ptr;

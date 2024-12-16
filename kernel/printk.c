@@ -92,7 +92,7 @@ int vsprintfk(char* format, va_list args)
 
 	char* char_lst = "0123456789abcdef";
 	// 有内存越界风险，不过缓冲区的后面应该没什么东西，暂时不考虑
-	if (buffer_info.current_ptr - buffer_info.init_ptr <= 0)
+	if (buffer_info.current_ptr - buffer_info.init_ptr <= buffer_info.limit)
 	{
 		clear_buffer();
 	}
