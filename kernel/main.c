@@ -1,3 +1,4 @@
+#include "disk.h"
 #include "info.h"
 #include "init.h"
 #include "memory.h"
@@ -25,11 +26,17 @@ void kernel_start(void)
 	init_trap();
 	init_memory();
 	init_irq();
+	init_disk_controller();
 
-	for (int i = 0; i < 10000000; ++i)
+	for (int i = 0; i < 1000; ++i)
 	{
 		printk("%d\n", i);
 	}
+
+	printk("zone addr:%lx\n", mmu_struct.zones_array);
+	printk("zone length:%lx\n", mmu_struct.zones_length);
+	printk("zone size:%lx\n", mmu_struct.zones_size);
+	// read_sectors(0, 1, (unsigned short*)0x66666, 0);
 
 	while (1)
 		;

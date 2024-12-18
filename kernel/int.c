@@ -25,8 +25,22 @@ IRQ_HANDLER(0x35);
 IRQ_HANDLER(0x36);
 IRQ_HANDLER(0x37);
 
-IRQ_FUNC(0x20);
-IRQ_FUNC(0x21);
+// 时钟中断
+void IRQ_0x20_func(void)
+{
+	// printk("clock\n");
+	io_out8(0x20, 0x20);
+	io_out8(0xa0, 0x20);
+}
+
+// 键盘中断
+void IRQ_0x21_func(void)
+{
+	unsigned char code = io_in8(0x60);
+	// printk("code:%x\n", code);
+	io_out8(0x20, 0x20);
+	io_out8(0xa0, 0x20);
+}
 IRQ_FUNC(0x22);
 IRQ_FUNC(0x23);
 IRQ_FUNC(0x24);
@@ -39,7 +53,14 @@ IRQ_FUNC(0x2a);
 IRQ_FUNC(0x2b);
 IRQ_FUNC(0x2c);
 IRQ_FUNC(0x2d);
-IRQ_FUNC(0x2e);
+// 主硬盘中断
+void IRQ_0x2e_func(void)
+{
+	// unsigned char mask = io_in8(0x1f7);
+	// printk("damn:%d\n", mask);
+	io_out8(0x20, 0x20);
+	io_out8(0xa0, 0x20);
+}
 IRQ_FUNC(0x2f);
 IRQ_FUNC(0x30);
 IRQ_FUNC(0x31);

@@ -19,6 +19,7 @@
 	{                                                                                                                  \
 		printk("This is an interrupt from IRQ which index is %x.\n", int_num);                                         \
 		io_out8(0x20, 0x20);                                                                                           \
+		io_out8(0xa0, 0x20);                                                                                           \
 	}
 
 #endif

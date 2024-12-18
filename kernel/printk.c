@@ -1,4 +1,5 @@
 #include "printk.h"
+#include "../lib/string.h"
 #include "ascii_array.h"
 #include "info.h"
 #include <stdarg.h>
@@ -294,14 +295,11 @@ void roll_up_line_clean(int n)
 	int* start_ptr = init_ptr + n * display_info.screen_width * display_info.char_height;
 	int	 count	   = end_ptr - start_ptr;
 
-	// for (int i = 0; i < count; ++i) {
-	//     *(init_ptr++) = *(start_ptr++);
-	//     // *(init_ptr++)  = *start_ptr;
-	//     // *(start_ptr++) = 0;
-	// }
-
 	__asm__ __volatile__("cld\n\t"
 						 "rep movsl\n\t" ::"S"(start_ptr),
 						 "D"(init_ptr), "c"(count));
+	// 后n行清零
+	memset(end_ptr - n * display_info.screen_width * display_info.char_height, 0,
+		   n * display_info.screen_width * display_info.char_height * 4);
 	display_info.row -= n > display_info.row ? display_info.row : n;
 }

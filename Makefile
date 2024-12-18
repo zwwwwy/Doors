@@ -7,7 +7,7 @@ other 	= $(wildcard ./build/other/*)
 bin_dir = ./build/bins
 obj_dir = ./build/objs
 
-kernel_obj = $(obj_dir)/head.o $(obj_dir)/main.o $(obj_dir)/printk.o $(obj_dir)/init.o $(obj_dir)/trap.o $(obj_dir)/memory.o $(obj_dir)/int.o
+kernel_obj = $(obj_dir)/head.o $(obj_dir)/main.o $(obj_dir)/printk.o $(obj_dir)/init.o $(obj_dir)/trap.o $(obj_dir)/memory.o $(obj_dir)/int.o $(obj_dir)/disk.o
 lib_obj = $(obj_dir)/string.o $(obj_dir)/io.o
 
 all: $(subdirs) ./build/imgs/boot.img

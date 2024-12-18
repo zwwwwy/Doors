@@ -224,3 +224,10 @@ void init_memory()
 
 	__asm__ __volatile__("movq	%%cr3, %0" : "=r"(GLOBAL_CR3)::"memory");
 }
+
+void init_disk_controller()
+{
+	// 复位硬盘控制器
+	io_out8(0x1F6, 0x04);
+	io_out8(0x1F7, 0x08);
+}
