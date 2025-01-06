@@ -20,6 +20,18 @@ SECTIONS
 		
 		_edata = .;
 	}
+	.rodata : 
+	{
+		_rodata = .;	
+		*(.rodata)
+		_erodata = .;
+	}
+
+	. = ALIGN(32768);
+	.data_init_task : { 
+		*(.data_init_task) 
+		}
+
 	.bss :
 	{
 		_bss = .;

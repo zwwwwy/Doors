@@ -30,7 +30,7 @@ void kernel_start(void)
 	init_memory();
 	init_irq();
 	init_disk_controller();
-	// init_pcb();
+	init_pcb();
 
 	// for (int i = 0; i < 1000; ++i)
 	// {
@@ -42,7 +42,7 @@ void kernel_start(void)
 	printk("zone size:%lx\n", mmu_struct.zones_size);
 	// read_sectors(0, 1, (unsigned short*)0x66666, 0);
 	//
-	// printk("init_thread.fs:%d", init_thread.fs);
+	printk("init_thread.fs:%d", init_thread.fs);
 
 	while (1)
 		;

@@ -13,11 +13,11 @@ memory_info		  memory_info_struct;
 char			  print_buffer[4096];
 unsigned long*	  GLOBAL_CR3;
 
-// mm_struct	  init_mm;
-// thread_struct init_thread;
+mm_struct	  init_mm;
+thread_struct init_thread;
 // task_union	  init_task_union __attribute__((__section__(".data.init_task"))) = {INIT_TASK(init_task_union.task)};
-//
-// task_struct* init_task[NR_CPUS] = {&init_task_union.task, 0};
+task_union	 init_task_union;
+task_struct* init_task[NR_CPUS];
 
 void init_display()
 {
@@ -239,24 +239,40 @@ void init_disk_controller()
 	io_out8(0x1F7, 0x08);
 }
 
-// void init_pcb()
-// {
-//     init_mm.pgd			 = 0;
-//     init_mm.start_code	 = 0;
-//     init_mm.end_code	 = 0;
-//     init_mm.start_data	 = 0;
-//     init_mm.end_data	 = 0;
-//     init_mm.start_brk	 = 0;
-//     init_mm.end_brk		 = 0;
-//     init_mm.start_rodata = 0;
-//     init_mm.end_rodata	 = 0;
-//     init_mm.start_stack	 = 0;
-//
-//     init_thread.rsp0	   = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long));
-//     init_thread.rsp		   = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long));
-//     init_thread.fs		   = KERNEL_DS;
-//     init_thread.gs		   = KERNEL_DS;
-//     init_thread.cr2		   = 0;
-//     init_thread.trap_nr	   = 0;
-//     init_thread.error_code = 0;
-// }
+void init_pcb()
+{
+	init_task_struct(&init_task_union.task);
+	init_task[0] = &init_task_union.task;
+
+	init_mm.pgd			 = 0;
+	init_mm.start_code	 = 0;
+	init_mm.end_code	 = 0;
+	init_mm.start_data	 = 0;
+	init_mm.end_data	 = 0;
+	init_mm.start_brk	 = 0;
+	init_mm.end_brk		 = 0;
+	init_mm.start_rodata = 0;
+	init_mm.end_rodata	 = 0;
+	init_mm.start_stack	 = 0;
+
+	init_thread.rsp0	   = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long));
+	init_thread.rsp		   = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long));
+	init_thread.fs		   = KERNEL_DS;
+	init_thread.gs		   = KERNEL_DS;
+	init_thread.cr2		   = 0;
+	init_thread.trap_nr	   = 0;
+	init_thread.error_code = 0;
+}
+
+void init_task_struct(task_struct* tsk)
+{
+	tsk->state		= TASK_INTERRUPTIBLE;
+	tsk->flags		= PF_KTHREAD;
+	tsk->mm			= &init_mm;
+	tsk->thread		= &init_thread;
+	tsk->addr_limit = 0xffff800000000000;
+	tsk->pid		= 0;
+	tsk->counter	= 1;
+	tsk->signal		= 0;
+	tsk->priority	= 0;
+}

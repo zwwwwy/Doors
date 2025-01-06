@@ -81,13 +81,14 @@ typedef union task_union
 } __attribute__((aligned(8))) task_union;
 
 #define INIT_TASK(tsk)                                                                                                 \
-	{.state	   = TASK_UNINTERRUPTIBLE,                                                                                 \
-	 .flags	   = PF_KTHREAD,                                                                                           \
-	 .mm	   = &init_mm,                                                                                             \
-	 .thread   = &init_thread,                                                                                         \
-	 .pid	   = 0,                                                                                                    \
-	 .counter  = 1,                                                                                                    \
-	 .signal   = 0,                                                                                                    \
-	 .priority = 0}
+	{.state		 = TASK_UNINTERRUPTIBLE,                                                                               \
+	 .flags		 = PF_KTHREAD,                                                                                         \
+	 .mm		 = &init_mm,                                                                                           \
+	 .thread	 = &init_thread,                                                                                       \
+	 .addr_limit = 0xffff800000000000,                                                                                 \
+	 .pid		 = 0,                                                                                                  \
+	 .counter	 = 1,                                                                                                  \
+	 .signal	 = 0,                                                                                                  \
+	 .priority	 = 0}
 
 #endif
