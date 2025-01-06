@@ -2,11 +2,14 @@
 #include "info.h"
 #include "init.h"
 #include "memory.h"
+#include "pcb.h"
 #include "printk.h"
 
 extern buffer_struck	 buffer_info;
 extern display_struct	 display_info;
 extern memory_descriptor mmu_struct;
+
+extern thread_struct init_thread;
 
 __attribute__((naked)) void setup_kernel()
 {
@@ -27,16 +30,19 @@ void kernel_start(void)
 	init_memory();
 	init_irq();
 	init_disk_controller();
+	// init_pcb();
 
-	for (int i = 0; i < 1000; ++i)
-	{
-		printk("%d\n", i);
-	}
+	// for (int i = 0; i < 1000; ++i)
+	// {
+	//     printk("%d\n", i);
+	// }
 
 	printk("zone addr:%lx\n", mmu_struct.zones_array);
 	printk("zone length:%lx\n", mmu_struct.zones_length);
 	printk("zone size:%lx\n", mmu_struct.zones_size);
 	// read_sectors(0, 1, (unsigned short*)0x66666, 0);
+	//
+	// printk("init_thread.fs:%d", init_thread.fs);
 
 	while (1)
 		;

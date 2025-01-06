@@ -58,6 +58,7 @@ start_boot:         ; offset=90
     mov     ss, ax
     mov     sp, ORG_ADDR
 
+
     ; 清屏
     mov     ax, 0x0600  ; AH=6->向上，AL=0->清屏
     mov     bx, 0x0700  ; BH: 0000 0111 BL: 0000 0000

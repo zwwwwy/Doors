@@ -7,4 +7,5 @@ void init_trap();
 void init_memory();
 void init_irq();
 void init_disk_controller();
+void init_pcb();
 #endif

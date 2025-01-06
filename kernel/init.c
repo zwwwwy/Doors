@@ -1,8 +1,9 @@
 #include "init.h"
+#include "../lib/io.h"
 #include "../lib/string.h"
 #include "info.h"
-#include "int.h"
 #include "memory.h"
+#include "pcb.h"
 #include "trap.h"
 
 display_struct	  display_info;
@@ -12,11 +13,17 @@ memory_info		  memory_info_struct;
 char			  print_buffer[4096];
 unsigned long*	  GLOBAL_CR3;
 
+// mm_struct	  init_mm;
+// thread_struct init_thread;
+// task_union	  init_task_union __attribute__((__section__(".data.init_task"))) = {INIT_TASK(init_task_union.task)};
+//
+// task_struct* init_task[NR_CPUS] = {&init_task_union.task, 0};
+
 void init_display()
 {
 	unsigned short screen_width;
 	unsigned short screen_height;
-	unsigned char  bpp;
+	unsigned char  bpp; // 像素深度, bits per pixel
 
 	__asm__ __volatile__("movw (0x90112), %0\n\t"
 						 "movw (0x90114), %1\n\t"
@@ -231,3 +238,25 @@ void init_disk_controller()
 	io_out8(0x1F6, 0x04);
 	io_out8(0x1F7, 0x08);
 }
+
+// void init_pcb()
+// {
+//     init_mm.pgd			 = 0;
+//     init_mm.start_code	 = 0;
+//     init_mm.end_code	 = 0;
+//     init_mm.start_data	 = 0;
+//     init_mm.end_data	 = 0;
+//     init_mm.start_brk	 = 0;
+//     init_mm.end_brk		 = 0;
+//     init_mm.start_rodata = 0;
+//     init_mm.end_rodata	 = 0;
+//     init_mm.start_stack	 = 0;
+//
+//     init_thread.rsp0	   = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long));
+//     init_thread.rsp		   = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long));
+//     init_thread.fs		   = KERNEL_DS;
+//     init_thread.gs		   = KERNEL_DS;
+//     init_thread.cr2		   = 0;
+//     init_thread.trap_nr	   = 0;
+//     init_thread.error_code = 0;
+// }

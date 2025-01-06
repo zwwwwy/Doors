@@ -67,4 +67,33 @@ unsigned long clean_page(page_struct* page);
 page_struct*  alloc_a_page(unsigned long page_attr);
 // num<=64
 page_struct* alloc_pages(unsigned int num, unsigned long page_attr);
+
+typedef struct
+{
+	unsigned long pml4t;
+} pml4t_t;
+#define mk_mpl4t(addr, attr) ((unsigned long)(addr) | (unsigned long)(attr))
+#define set_mpl4t(mpl4tptr, mpl4tval) (*(mpl4tptr) = (mpl4tval))
+
+typedef struct
+{
+	unsigned long pdpt;
+} pdpt_t;
+#define mk_pdpt(addr, attr) ((unsigned long)(addr) | (unsigned long)(attr))
+#define set_pdpt(pdptptr, pdptval) (*(pdptptr) = (pdptval))
+
+typedef struct
+{
+	unsigned long pdt;
+} pdt_t;
+#define mk_pdt(addr, attr) ((unsigned long)(addr) | (unsigned long)(attr))
+#define set_pdt(pdtptr, pdtval) (*(pdtptr) = (pdtval))
+
+typedef struct
+{
+	unsigned long pt;
+} pt_t;
+#define mk_pt(addr, attr) ((unsigned long)(addr) | (unsigned long)(attr))
+#define set_pt(ptptr, ptval) (*(ptptr) = (ptval))
+
 #endif
