@@ -2,6 +2,7 @@
 #include "info.h"
 #include "init.h"
 #include "printk.h"
+#include "ptrace.h"
 
 extern display_struct display_info;
 
@@ -103,7 +104,6 @@ __attribute__((naked)) void save_reg()
 						 "pushq 	%r15\n\t"
 
 						 "cld\n\t"
-						 "movq 	0x90(%rsp), %rsi\n\t" // 错误码
 						 "movq 	0x88(%rsp), %rdx\n\t" // 函数入口
 						 "movq 	%rsp, %rcx\n\t"		  // rsp
 						 "movq 	$0x10, %rax\n\t"
@@ -152,15 +152,12 @@ __attribute__((naked)) void divide_fault_handler()
 
 void divide_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
-	blue_screen();
+	pt_regs* regs; // 即把所有寄存器都入栈后的栈顶
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
+	// blue_screen();
 	printk_color("[ERROR]", RED, BLUE_SCREEN);
-	printk_color("Division by zero. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLUE_SCREEN, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Division by zero. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLUE_SCREEN, regs->errcode, regs->rip,
+				 regs->rsp);
 	while (1)
 		;
 }
@@ -177,15 +174,12 @@ __attribute__((naked)) void debug_fault_handler()
 
 void debug_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[INT]", WHITE, BLACK);
-	printk_color("Debug interrupt. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code, *(long*)(rsp + 152),
-				 rsp);
+	printk_color("Debug interrupt. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode, regs->rip,
+				 regs->rsp);
 	while (1)
 		;
 }
@@ -202,15 +196,12 @@ __attribute__((naked)) void nmi_int_handler()
 
 void nmi_int()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[INT]", WHITE, BLACK);
-	printk_color("Non-maskable interrupt occurred. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Non-maskable interrupt occurred. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode,
+				 regs->rip, regs->rsp);
 	while (1)
 		;
 }
@@ -227,15 +218,12 @@ __attribute__((naked)) void breakPoint_trap_handler()
 
 void breakPoint_trap()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[INT]", WHITE, BLACK);
-	printk_color("Step into a break point. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Step into a break point. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode, regs->rip,
+				 regs->rsp);
 	while (1)
 		;
 }
@@ -252,15 +240,12 @@ __attribute__((naked)) void overFlow_trap_handler()
 
 void overFlow_trap()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[WARNING]", ORANGE, BLACK);
-	printk_color("Arithmetic overflow. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code, *(long*)(rsp + 152),
-				 rsp);
+	printk_color("Arithmetic overflow. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode, regs->rip,
+				 regs->rsp);
 	while (1)
 		;
 }
@@ -277,15 +262,12 @@ __attribute__((naked)) void boundsCheck_fault_handler()
 
 void boundsCheck_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[WARNING]", ORANGE, BLACK);
-	printk_color("Array bounds or index out of range. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Array bounds or index out of range. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode,
+				 regs->rip, regs->rsp);
 	while (1)
 		;
 }
@@ -302,15 +284,12 @@ __attribute__((naked)) void invalidOpcode_fault_handler()
 
 void invalidOpcode_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Invlid or unknown instruction. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Invlid or unknown instruction. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode,
+				 regs->rip, regs->rsp);
 	while (1)
 		;
 }
@@ -327,15 +306,12 @@ __attribute__((naked)) void deviceNotAvailable_fault_handler()
 
 void deviceNotAvailable_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Co-processor or device unavailable. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Co-processor or device unavailable. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode,
+				 regs->rip, regs->rsp);
 	while (1)
 		;
 }
@@ -353,15 +329,12 @@ __attribute__((naked)) void doubleFault_abort_handler()
 
 void doubleFault_abort()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[ERROR]", RED, BLACK);
 	printk_color("Exception triggered while handling another exception. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK,
-				 error_code, *(long*)(rsp + 152), rsp);
+				 regs->errcode, regs->rip, regs->rsp);
 	while (1)
 		;
 }
@@ -378,15 +351,12 @@ __attribute__((naked)) void coprocessorSegmentOverrun_fault_handler()
 
 void coprocessorSegmentOverrun_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[WARNING]", ORANGE, BLACK);
-	printk_color("Access beyond coprocess's segment limit. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Access beyond coprocess's segment limit. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK,
+				 regs->errcode, regs->rip, regs->rsp);
 	while (1)
 		;
 }
@@ -404,15 +374,12 @@ __attribute__((naked)) void invalidTSS_fault_handler()
 
 void invalidTSS_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Invlid or corrupted TSS. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Invlid or corrupted TSS. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode, regs->rip,
+				 regs->rsp);
 	while (1)
 		;
 }
@@ -430,15 +397,12 @@ __attribute__((naked)) void segmentNotPresent_fault_handler()
 
 void segmentNotPresent_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Access to a non-existent segment. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Access to a non-existent segment. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode,
+				 regs->rip, regs->rsp);
 	while (1)
 		;
 }
@@ -456,15 +420,12 @@ __attribute__((naked)) void stackSegmentFault_fault_handler()
 
 void stackSegmentFault_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Error in stack segment access. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Error in stack segment access. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode,
+				 regs->rip, regs->rsp);
 	while (1)
 		;
 }
@@ -482,15 +443,12 @@ __attribute__((naked)) void generalProtectionFault_fault_handler()
 
 void generalProtectionFault_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("General protection fault. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("General protection fault. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode, regs->rip,
+				 regs->rsp);
 	while (1)
 		;
 }
@@ -508,16 +466,14 @@ __attribute__((naked)) void pageFault_fault_handler()
 
 void pageFault_fault()
 {
-	long rsp;
-	long error_code;
-	long cr2;
+	pt_regs* regs;
+	long	 cr2;
 	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 "movq 	%%cr2, %2\n\t"
-						 : "=r"(rsp), "=r"(error_code), "=r"(cr2));
+						 "movq 	%%cr2, %1\n\t"
+						 : "=r"(regs), "=r"(cr2));
 	blue_screen();
 	printk_color("[ERROR]", RED, BLUE_SCREEN);
-	if (error_code & 1)
+	if (regs->errcode & 1)
 	{
 		printk_color("Can not access page.", WHITE, BLUE_SCREEN);
 	}
@@ -527,7 +483,7 @@ void pageFault_fault()
 	}
 
 	printk_color("A page fault caused by ", WHITE, BLUE_SCREEN);
-	if (error_code & 4)
+	if (regs->errcode & 4)
 	{
 		printk_color("user when ", WHITE, BLUE_SCREEN);
 	}
@@ -536,7 +492,7 @@ void pageFault_fault()
 		printk_color("supervisor when ", WHITE, BLUE_SCREEN);
 	}
 
-	if (error_code & 2)
+	if (regs->errcode & 2)
 	{
 		printk_color("writing page.", WHITE, BLUE_SCREEN);
 	}
@@ -545,17 +501,17 @@ void pageFault_fault()
 		printk_color("reading page.", WHITE, BLUE_SCREEN);
 	}
 
-	if (error_code & 8)
+	if (regs->errcode & 8)
 	{
 		printk_color("Reserved bits.", WHITE, BLUE_SCREEN);
 	}
 
-	if (error_code & 16)
+	if (regs->errcode & 16)
 	{
 		printk_color("Getting instruction.", WHITE, BLUE_SCREEN);
 	}
-	printk_color("\nInfo: error_code=%ld, IP=%lx, SP=%lx, CR2=%lx", WHITE, BLUE_SCREEN, error_code, *(long*)(rsp + 152),
-				 rsp, cr2);
+	printk_color("\nInfo: error_code=%ld, IP=%lx, SP=%lx, CR2=%lx", WHITE, BLUE_SCREEN, regs->errcode, regs->rip,
+				 regs->rsp, cr2);
 	while (1)
 		;
 }
@@ -573,15 +529,12 @@ __attribute__((naked)) void floatPointError_fault_handler()
 
 void floatPointError_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[WARNING]", ORANGE, BLACK);
-	printk_color("Float point error. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code, *(long*)(rsp + 152),
-				 rsp);
+	printk_color("Float point error. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode, regs->rip,
+				 regs->rsp);
 	while (1)
 		;
 }
@@ -599,15 +552,12 @@ __attribute__((naked)) void alignmentCheck_fault_handler()
 
 void alignmentCheck_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[WARNING]", ORANGE, BLACK);
-	printk_color("Misaligned memory access. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Misaligned memory access. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode, regs->rip,
+				 regs->rsp);
 	while (1)
 		;
 }
@@ -624,15 +574,12 @@ __attribute__((naked)) void machineCheck_abort_handler()
 
 void machineCheck_abort()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("Hardware error or malfunction. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("Hardware error or malfunction. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode,
+				 regs->rip, regs->rsp);
 	while (1)
 		;
 }
@@ -649,15 +596,12 @@ __attribute__((naked)) void SIMDFloatException_fault_handler()
 
 void SIMDFloatException_fault()
 {
-	long rsp;
-	long error_code;
-	__asm__ __volatile__("movq 	%%rcx, %0\n\t"
-						 "movq 	%%rsi, %1\n\t"
-						 : "=r"(rsp), "=r"(error_code));
+	pt_regs* regs;
+	__asm__ __volatile__("movq 	%%rcx, %0\n\t" : "=r"(regs));
 
 	printk_color("[ERROR]", RED, BLACK);
-	printk_color("SIMD float exception. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, error_code,
-				 *(long*)(rsp + 152), rsp);
+	printk_color("SIMD float exception. error_code=%ld, IP=%lx, SP=%lx\n", WHITE, BLACK, regs->errcode, regs->rip,
+				 regs->rsp);
 	while (1)
 		;
 }

@@ -80,15 +80,23 @@ typedef union task_union
 	unsigned long stack[STACK_SIZE / sizeof(unsigned long)];
 } __attribute__((aligned(8))) task_union;
 
-#define INIT_TASK(tsk)                                                                                                 \
-	{.state		 = TASK_UNINTERRUPTIBLE,                                                                               \
-	 .flags		 = PF_KTHREAD,                                                                                         \
-	 .mm		 = &init_mm,                                                                                           \
-	 .thread	 = &init_thread,                                                                                       \
-	 .addr_limit = 0xffff800000000000,                                                                                 \
-	 .pid		 = 0,                                                                                                  \
-	 .counter	 = 1,                                                                                                  \
-	 .signal	 = 0,                                                                                                  \
-	 .priority	 = 0}
+typedef struct tss_struct
+{
+	unsigned int   reserved0;
+	unsigned long  rsp0;
+	unsigned long  rsp1;
+	unsigned long  rsp2;
+	unsigned long  reserved1;
+	unsigned long  ist1;
+	unsigned long  ist2;
+	unsigned long  ist3;
+	unsigned long  ist4;
+	unsigned long  ist5;
+	unsigned long  ist6;
+	unsigned long  ist7;
+	unsigned long  reserved2;
+	unsigned short reserved3;
+	unsigned short iomapbaseaddr;
+} __attribute__((packed)) tss_struct;
 
 #endif

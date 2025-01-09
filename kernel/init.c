@@ -13,11 +13,12 @@ memory_info		  memory_info_struct;
 char			  print_buffer[4096];
 unsigned long*	  GLOBAL_CR3;
 
+// task_union	  init_task_union __attribute__((__section__(".data.init_task"))) = {INIT_TASK(init_task_union.task)};
 mm_struct	  init_mm;
 thread_struct init_thread;
-// task_union	  init_task_union __attribute__((__section__(".data.init_task"))) = {INIT_TASK(init_task_union.task)};
-task_union	 init_task_union;
-task_struct* init_task[NR_CPUS];
+task_union	  init_task_union;
+task_struct	  init_task[NR_CPUS];
+tss_struct	  init_tss[NR_CPUS];
 
 void init_display()
 {
@@ -239,10 +240,42 @@ void init_disk_controller()
 	io_out8(0x1F7, 0x08);
 }
 
+inline void init_task_struct(task_struct* tsk)
+{
+	tsk->state		= TASK_INTERRUPTIBLE;
+	tsk->flags		= PF_KTHREAD;
+	tsk->mm			= &init_mm;
+	tsk->thread		= &init_thread;
+	tsk->addr_limit = 0xffff800000000000;
+	tsk->pid		= 0;
+	tsk->counter	= 1;
+	tsk->signal		= 0;
+	tsk->priority	= 0;
+}
+
+inline void init_tss_struct(tss_struct* tss)
+{
+	tss->reserved0	   = 0;
+	tss->rsp0		   = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long));
+	tss->rsp1		   = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long));
+	tss->rsp2		   = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long));
+	tss->reserved1	   = 0;
+	tss->ist1		   = 0xffff800000007c00;
+	tss->ist2		   = 0xffff800000007c00;
+	tss->ist3		   = 0xffff800000007c00;
+	tss->ist4		   = 0xffff800000007c00;
+	tss->ist5		   = 0xffff800000007c00;
+	tss->ist6		   = 0xffff800000007c00;
+	tss->ist7		   = 0xffff800000007c00;
+	tss->reserved2	   = 0;
+	tss->reserved3	   = 0;
+	tss->iomapbaseaddr = 0;
+}
+
 void init_pcb()
 {
 	init_task_struct(&init_task_union.task);
-	init_task[0] = &init_task_union.task;
+	init_task[0] = init_task_union.task;
 
 	init_mm.pgd			 = 0;
 	init_mm.start_code	 = 0;
@@ -264,15 +297,10 @@ void init_pcb()
 	init_thread.error_code = 0;
 }
 
-void init_task_struct(task_struct* tsk)
+void init_tss_array()
 {
-	tsk->state		= TASK_INTERRUPTIBLE;
-	tsk->flags		= PF_KTHREAD;
-	tsk->mm			= &init_mm;
-	tsk->thread		= &init_thread;
-	tsk->addr_limit = 0xffff800000000000;
-	tsk->pid		= 0;
-	tsk->counter	= 1;
-	tsk->signal		= 0;
-	tsk->priority	= 0;
+	for (int i = 0; i < NR_CPUS; ++i)
+	{
+		init_tss_struct(&init_tss[i]);
+	}
 }

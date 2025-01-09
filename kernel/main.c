@@ -31,11 +31,14 @@ void kernel_start(void)
 	init_irq();
 	init_disk_controller();
 	init_pcb();
+	init_tss_array();
 
 	// for (int i = 0; i < 1000; ++i)
 	// {
 	//     printk("%d\n", i);
 	// }
+
+	int i = *(int*)0xffffffffffffffff;
 
 	printk("zone addr:%lx\n", mmu_struct.zones_array);
 	printk("zone length:%lx\n", mmu_struct.zones_length);
